@@ -43,10 +43,37 @@ ollama serve
 
 ## 使用方法
 
+### 每次运行前的步骤
+
+1. 进入项目目录
+```bash
+cd /Users/DongZh/Desktop/tryOllama
+```
+
+2. 激活虚拟环境
 ```bash
 source .venv/bin/activate
+```
+激活成功后，终端提示符前会显示 `(.venv)`
+
+3. 运行程序
+```bash
 python main.py
 ```
+
+4. 退出虚拟环境（程序结束后）
+```bash
+deactivate
+```
+
+### 快速运行（不持久激活）
+
+如果不想激活虚拟环境，可以直接使用：
+```bash
+.venv/bin/python main.py
+```
+
+### 使用说明
 
 输入问题后回车即可与 AI 对话，输入 `exit` 或 `quit` 退出程序。
 
