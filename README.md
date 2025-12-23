@@ -17,7 +17,7 @@
 
 1. 克隆项目
 ```bash
-git clone https://github.com/你的用户名/agent_service.git
+git clone https://github.com/Tiger-Dong/agent_service.git
 cd agent_service
 ```
 
