@@ -1,35 +1,53 @@
-import requests
-import json
+import os
+from openai import OpenAI
+from dotenv import load_dotenv
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "qwen3:8b"
+# 加载环境变量
+load_dotenv()
+
+# 配置 OpenAI Client 连接到本地 Ollama
+client = OpenAI(
+    base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
+    api_key=os.getenv("OLLAMA_API_KEY", "ollama")  # Ollama 不需要真实 API key，但 OpenAI 库要求提供
+)
+
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen3:8b")
 
 def ask_qwen(prompt: str) -> str:
-    payload = { # 像个字典，使用什么模型，传入什么提示词
-        "model": MODEL_NAME,
-        "prompt": prompt,
-        "stream": False # 不使用流式输出，一次性返回完整回答，不是一个一个字发，好处思考完整，坏处是等待时间较长。（TTFT 使用 First Token Time）
-        #流式需更改调用用方式
-    }
-
-    response = requests.post(
-        OLLAMA_URL, # 使用本地部署的 Qwen3:8b 模型，常量 OLLAMA_URL 指向本地服务器地址，定义模型名称 MODEL_NAME
-        headers={"Content-Type": "application/json"}, # 设置请求头，使用 JSON 格式，（改成Open AI 的格式）
-        data=json.dumps(payload), #
-        timeout=120
-    )
-
-    response.raise_for_status()
-    return response.json()["response"]
+    """
+    使用 OpenAI Client 方式调用本地 Ollama 模型
+    Args:
+        prompt: 用户输入的问题
+    Returns:
+        模型的回答
+    """
+    try:
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            stream=False,  # 非流式输出
+            temperature=0.7,
+            timeout=120
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"错误：{str(e)}"
 
 
 if __name__ == "__main__":
-    print("✅ 本地 Qwen3:8b 已连接，输入 exit 退出\n")
+    print(f"✅ 使用 OpenAI Client 连接本地 Ollama 模型: {MODEL_NAME}")
+    print("输入 exit 或 quit 退出\n")
 
     while True:
-        user_input = input("User：")  # 获取用户输入，以后要通过其他方式替换
+        user_input = input("User：")
         if user_input.lower() in ("exit", "quit"):
+            print("再见！")
             break
 
+        if not user_input.strip():
+            continue
+
         answer = ask_qwen(user_input)
-        print(f"\nQwen3：{answer}\n")
+        print(f"\nAssistant：{answer}\n")
