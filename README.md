@@ -55,11 +55,6 @@ ollama pull qwen3:8b
 ollama serve
 ```
 
-**包管理：**
-- 使用 uv 替代传统 pip（速度提升 10-100 倍）
-- 快速的依赖解析和安装
-- 更好的依赖冲突解决
-
 ## 使用方法
 
 ### 每次运行前的步骤
@@ -104,7 +99,8 @@ deactivate
 .venv/bin/python geocoding.py
 ```
 输入任意地址，获取对应的经纬度坐标。
-项目结构
+
+## 项目结构
 
 ```
 agent_service/
@@ -183,7 +179,26 @@ if result:
 
 ```bash
 请输入地址: Beijing, China
-✅ 查技术特点
+✅ 查询成功！
+📍 经度: 116.4074
+📍 纬度: 39.9042
+📝 完整地址: 北京市, 中国
+
+请输入地址: Eiffel Tower
+✅ 查询成功！
+📍 经度: 2.2945
+📍 纬度: 48.8584
+📝 完整地址: Tour Eiffel, Paris, France
+```
+
+## 配置说明
+
+`.env` 文件配置项：
+- `OLLAMA_BASE_URL`: Ollama API 地址（默认：http://localhost:11434/v1）
+- `OLLAMA_API_KEY`: API Key（Ollama 不验证，但必须提供）
+- `MODEL_NAME`: 使用的模型名称（默认：qwen3:8b）
+
+## 技术特点
 
 **AI 对话功能：**
 - 使用 OpenAI 官方客户端库
@@ -191,36 +206,20 @@ if result:
 - 轻松切换到其他 OpenAI 兼容的服务
 - 使用 python-dotenv 管理环境变量
 
-
 **地理编码功能：**
 - 基于 OpenStreetMap Nominatim API
 - 支持全球地址查询（中英文）
 - 自动速率限制保护
 - 返回详细地址信息和匹配度评分
 
+**包管理：**
+- 使用 uv 替代传统 pip（速度提升 10-100 倍）
+- 快速的依赖解析和安装
+- 更好的依赖冲突解决
+
 ## 许可证
 
 本项目遵循 MIT 许可证。使用 Nominatim 服务请遵守 [OSM 使用政策](https://operations.osmfoundation.org/policies/nominatim/)。
-
-📍 经度: 116.4074
-📍 纬度: 39.9042
-📝 完整地址: 北京市, 中国
-
-请输入地址: Eiffel Tower
-✅ 查询成功！
-📍 配置说明
-## 技术特点
-
-- 使用 OpenAI 官方客户端库
-- 兼容 OpenAI API 格式
-- 轻松切换到其他 OpenAI 兼容的服务
-- 使用 python-dotenv 管理环境变量
-agent_service/
-├── main.py           # 主程序
-├── requirements.txt  # 依赖列表
-├── README.md         # 项目说明
-└── .gitignore       # Git 忽略文件
-```
 
 ## 为什么选择 uv？
 
