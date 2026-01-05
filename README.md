@@ -6,6 +6,9 @@
 
 - 🎯 **统一菜单系统**：一键启动，智能切换多种功能模式
 - 🤖 **AI 对话模式**：使用 OpenAI Client 连接本地 Ollama 服务
+  - 🔧 **MCP 工具调用**：AI 可自动调用地理编码工具查询位置信息
+  - 💡 智能识别地址相关问题并自动查询坐标
+  - 📝 保持对话历史，支持多轮交互
 - 🗺️ **地图查询模式**：支持地址转经纬度查询（基于 OpenStreetMap）
 - ⚙️ **设置中心**：配置语言偏好和 AI 显示选项
   - 🌐 **完整多语言支持**（中文/English）
@@ -142,12 +145,26 @@ cd /Users/DongZh/Desktop/tryOllama
 .venv/bin/python main.py
 ```
 
-2. **选择 AI 对话模式**
+2. **选择 AI 对话模式（支持 MCP 工具调用）**
 ```
 请选择模式：1
-🤖 AI对话模式已启动
+🤖 AI对话模式已启动 - 模型: qwen3:8b
+💬 你可以开始与 AI 对话了！
+💡 你可以问我关于地址和位置的问题，我会自动查询地理信息！
+
 User：你好
 Assistant：你好！有什么我可以帮助你的吗？
+
+User：北京天安门的经纬度是多少？
+
+🔧 正在调用工具: geocode_address
+📍 查询地址: 北京天安门
+
+Assistant：北京天安门的经纬度坐标如下：
+- 经度：116.391263°
+- 纬度：39.907359°
+
+该坐标对应的具体地址为：天安门, 西长安街, 东华门街道, 北京市东城区
 
 User：返回菜单
 🔄 正在返回主菜单...
@@ -221,7 +238,8 @@ deactivate
 
 ```
 agent_service/
-├── main.py                  # 主程序入口（统一菜单系统 + AI 对话）
+├── main.py                  # 主程序入口（统一菜单系统 + AI 对话 + MCP 工具）
+├── textD.py                 # 多语言文本字典（Text Dictionary）
 ├── geocoding.py             # 地理编码模块（OpenStreetMap）
 ├── geocoding_examples.py    # 地理编码使用示例
 ├── requirements.txt         # 依赖列表
@@ -230,6 +248,54 @@ agent_service/
 ├── README.md                # 项目说明
 └── .gitignore              # Git 忽略文件
 ```
+## MCP 工具调用功能 🔧
+
+### 什么是 MCP？
+
+Model Context Protocol (MCP) 是一种让 AI 模型能够调用外部工具的标准协议。在本项目中，我们实现了基于 OpenAI Function Calling 的 MCP 风格工具调用。
+
+### 功能特点
+
+- **🎯 智能识别**：AI 自动判断何时需要查询地理信息
+- **🔄 无缝集成**：用户无需手动切换模式，直接对话即可
+- **📊 结构化数据**：工具返回 JSON 格式数据，AI 自动解析并友好呈现
+- **💬 上下文保持**：支持多轮对话，AI 记住之前的查询结果
+
+### 使用示例
+
+```bash
+User：帮我查一下巴黎埃菲尔铁塔的坐标
+
+🔧 正在调用工具: geocode_address
+📍 查询地址: 巴黎埃菲尔铁塔
+
+Assistant：巴黎埃菲尔铁塔的坐标如下：
+- 经度：2.2945°
+- 纬度：48.8580°
+
+完整地址：Tour Eiffel, Avenue Gustave Eiffel, Paris 75007, France
+
+User：它离卢浮宫远吗？
+
+Assistant：[AI 会基于之前的位置信息继续对话]
+```
+
+### 工具定义
+
+当前支持的 MCP 工具：
+
+1. **geocode_address** - 地理编码工具
+   - 输入：地址字符串（中英文均可）
+   - 输出：经纬度、完整地址、匹配度等信息
+   - 应用场景：位置查询、导航、地理分析
+
+### 扩展性
+
+项目架构支持轻松添加新工具：
+1. 在 `TOOLS` 列表中定义新工具的 JSON Schema
+2. 在 `execute_tool()` 函数中实现工具逻辑
+3. AI 会自动学习何时调用新工具
+
 ## 地理编码功能 🗺️
 
 ### 功能说明
@@ -386,17 +452,22 @@ Assistant: Hello! How can I help you?
 ## 技术特点
 
 **多语言架构：**
-- 文本与逻辑完全分离
-- 支持动态语言切换
-- 易于扩展新语言
-- 中英文命令智能识别
+- 📁 **textD.py** - 文本字典独立文件，逻辑与展示完全分离
+- 🔄 数据结构优化：第一层为功能关键词，第二层为语言代码（cn/en）
+- 🌐 支持动态语言切换，易于扩展新语言
+- 🎯 中英文命令智能识别
 
-**AI 对话功能：**
-- 使用 OpenAI 官方客户端库
-- 兼容 OpenAI API 格式
-- 轻松切换到其他 OpenAI 兼容的服务
-- 使用 python-dotenv 管理环境变量
-- 支持流式和非流式输出
+**AI 对话功能（MCP 增强）：**
+- 🔧 **Model Context Protocol (MCP) 工具调用**
+  - AI 可自动识别地理位置相关问题
+  - 调用 geocode_address 工具实时查询坐标
+  - 工具结果自动集成到 AI 回答中
+- 🤖 使用 OpenAI 官方客户端库
+- ⚡ 兼容 OpenAI API 格式
+- 🔄 轻松切换到其他 OpenAI 兼容的服务
+- 📝 保持完整对话历史，支持上下文理解
+- 🌊 支持流式和非流式输出
+- 🔐 使用 python-dotenv 管理环境变量
 
 **地理编码功能：**
 - 基于 OpenStreetMap Nominatim API
