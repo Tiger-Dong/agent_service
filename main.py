@@ -16,7 +16,7 @@ MODEL_NAME = os.getenv("MODEL_NAME", "qwen3:8b")
 
 # 全局设置
 SETTINGS = {
-    "language": "中文",  # 可选: "中文", "English"
+    "language": "cn",  # 可选: "cn", "en"
     "show_thinking": False  # 是否显示 AI thinking 过程
 }
 
@@ -27,112 +27,58 @@ MODE_KEYWORDS = {
     "settings": ("3", "设置", "settings", "配置", "setting")
 }
 
-# 多语言文本字典
+# 多语言文本字典 - 第一级为关键词，第二级为语言代码（cn/en）
 TEXTS = {
-    "中文": {
-        "goodbye": "👋 再见！",
-        "returning_menu": "🔄 正在返回主菜单...\n",
-        "main_title": "🎯 多功能智能助手",
-        "available_modes": "📋 可用模式：",
-        "mode_ai": "  1️⃣  AI对话模式 - 与 Ollama AI 进行对话",
-        "mode_map": "  2️⃣  地图查询模式 - 查询地址的经纬度坐标",
-        "mode_settings": "  3️⃣  设置 - 配置语言和显示选项",
-        "tip_return": "💡 提示：在任意模式中输入 '返回菜单' 可返回主菜单",
-        "tip_exit": "       输入 'exit' 或 'quit' 可退出程序\n",
-        "choose_mode": "请选择模式（输入数字或模式名称）：",
-        "invalid_choice": "❌ 无效的选择，请重新输入\n",
-        "thank_you": "👋 感谢使用，再见！",
-        "ai_mode_title": "🤖 AI对话模式已启动 - 模型: {model}",
-        "ai_mode_subtitle": "💬 你可以开始与 AI 对话了！",
-        "return_menu_tip": "📌 输入 '返回菜单' 返回主菜单\n",
-        "user_prompt": "User：",
-        "assistant_prompt": "\nAssistant：{answer}\n",
-        "ai_thinking": "\n🤔 AI 正在思考...\n",
-        "map_mode_title": "🌍 地图查询模式已启动 - OpenStreetMap 地理编码",
-        "map_mode_subtitle": "📍 输入地址获取经纬度坐标",
-        "enter_address": "请输入地址: ",
-        "searching": "\n🔍 正在查询: {address}",
-        "query_success": "\n✅ 查询成功！",
-        "longitude": "📍 经度 (Longitude): {lon}",
-        "latitude": "📍 纬度 (Latitude): {lat}",
-        "full_address": "📝 完整地址: {addr}",
-        "importance": "⭐ 匹配度: {imp:.2f}",
-        "address_not_found": "\n❌ 未找到该地址，请尝试更具体的地址",
-        "settings_title": "⚙️  设置 / Settings",
-        "current_settings": "📋 当前设置：",
-        "setting_language": "  1️⃣  语言 / Language: {lang}",
-        "setting_thinking": "  2️⃣  显示 AI Thinking: {status}",
-        "modify_tip": "💡 输入数字修改设置，输入 '返回菜单' 返回\n",
-        "choose_setting": "请选择要修改的设置：",
-        "language_settings": "\n📝 语言设置 / Language Settings",
-        "lang_option_cn": "  1. 中文",
-        "lang_option_en": "  2. English",
-        "select_language": "\n请选择语言 / Select language (1/2): ",
-        "switched_to_cn": "✅ 已切换到中文",
-        "switched_to_en": "✅ Switched to English",
-        "invalid_lang_choice": "❌ 无效选择 / Invalid choice",
-        "thinking_settings": "\n📝 AI Thinking 显示设置",
-        "current_status": "  当前状态: {status}",
-        "enable_thinking": "\n是否开启显示 AI thinking 过程？(y/n): ",
-        "thinking_enabled": "✅ 已开启 AI thinking 显示",
-        "thinking_disabled": "✅ 已关闭 AI thinking 显示",
-        "invalid_input": "❌ 无效输入",
-        "status_on": "开启",
-        "status_off": "关闭",
-        "error": "错误：{error}"
-    },
-    "English": {
-        "goodbye": "👋 Goodbye!",
-        "returning_menu": "🔄 Returning to main menu...\n",
-        "main_title": "🎯 Multi-functional AI Assistant",
-        "available_modes": "📋 Available Modes:",
-        "mode_ai": "  1️⃣  AI Chat Mode - Chat with Ollama AI",
-        "mode_map": "  2️⃣  Map Query Mode - Query address coordinates",
-        "mode_settings": "  3️⃣  Settings - Configure language and display options",
-        "tip_return": "💡 Tip: Enter 'return menu' to go back to main menu",
-        "tip_exit": "       Enter 'exit' or 'quit' to exit program\n",
-        "choose_mode": "Choose mode (number or name): ",
-        "invalid_choice": "❌ Invalid choice, please try again\n",
-        "thank_you": "👋 Thank you for using, goodbye!",
-        "ai_mode_title": "🤖 AI Chat Mode Started - Model: {model}",
-        "ai_mode_subtitle": "💬 You can start chatting with AI now!",
-        "return_menu_tip": "📌 Enter 'return menu' to go back\n",
-        "user_prompt": "User: ",
-        "assistant_prompt": "\nAssistant: {answer}\n",
-        "ai_thinking": "\n🤔 AI is thinking...\n",
-        "map_mode_title": "🌍 Map Query Mode Started - OpenStreetMap Geocoding",
-        "map_mode_subtitle": "📍 Enter address to get coordinates",
-        "enter_address": "Enter address: ",
-        "searching": "\n🔍 Searching: {address}",
-        "query_success": "\n✅ Query successful!",
-        "longitude": "📍 Longitude: {lon}",
-        "latitude": "📍 Latitude: {lat}",
-        "full_address": "📝 Full address: {addr}",
-        "importance": "⭐ Match score: {imp:.2f}",
-        "address_not_found": "\n❌ Address not found, please try a more specific address",
-        "settings_title": "⚙️  Settings",
-        "current_settings": "📋 Current Settings:",
-        "setting_language": "  1️⃣  Language: {lang}",
-        "setting_thinking": "  2️⃣  Show AI Thinking: {status}",
-        "modify_tip": "💡 Enter number to modify settings, enter 'return menu' to go back\n",
-        "choose_setting": "Choose setting to modify: ",
-        "language_settings": "\n📝 Language Settings",
-        "lang_option_cn": "  1. 中文 (Chinese)",
-        "lang_option_en": "  2. English",
-        "select_language": "\nSelect language (1/2): ",
-        "switched_to_cn": "✅ 已切换到中文",
-        "switched_to_en": "✅ Switched to English",
-        "invalid_lang_choice": "❌ Invalid choice",
-        "thinking_settings": "\n📝 AI Thinking Display Settings",
-        "current_status": "  Current status: {status}",
-        "enable_thinking": "\nEnable AI thinking display? (y/n): ",
-        "thinking_enabled": "✅ AI thinking display enabled",
-        "thinking_disabled": "✅ AI thinking display disabled",
-        "invalid_input": "❌ Invalid input",
-        "status_on": "On",
-        "status_off": "Off",
-        "error": "Error: {error}"
-    }
+    "goodbye": {"cn": "👋 再见！", "en": "👋 Goodbye!"},
+    "returning_menu": {"cn": "🔄 正在返回主菜单...\n", "en": "🔄 Returning to main menu...\n"},
+    "main_title": {"cn": "🎯 多功能智能助手", "en": "🎯 Multi-functional AI Assistant"},
+    "available_modes": {"cn": "📋 可用模式：", "en": "📋 Available Modes:"},
+    "mode_ai": {"cn": "  1️⃣  AI对话模式 - 与 Ollama AI 进行对话", "en": "  1️⃣  AI Chat Mode - Chat with Ollama AI"},
+    "mode_map": {"cn": "  2️⃣  地图查询模式 - 查询地址的经纬度坐标", "en": "  2️⃣  Map Query Mode - Query address coordinates"},
+    "mode_settings": {"cn": "  3️⃣  设置 - 配置语言和显示选项", "en": "  3️⃣  Settings - Configure language and display options"},
+    "tip_return": {"cn": "💡 提示：在任意模式中输入 '返回菜单' 可返回主菜单", "en": "💡 Tip: Enter 'return menu' to go back to main menu"},
+    "tip_exit": {"cn": "       输入 'exit' 或 'quit' 可退出程序\n", "en": "       Enter 'exit' or 'quit' to exit program\n"},
+    "choose_mode": {"cn": "请选择模式（输入数字或模式名称）：", "en": "Choose mode (number or name): "},
+    "invalid_choice": {"cn": "❌ 无效的选择，请重新输入\n", "en": "❌ Invalid choice, please try again\n"},
+    "thank_you": {"cn": "👋 感谢使用，再见！", "en": "👋 Thank you for using, goodbye!"},
+    "ai_mode_title": {"cn": "🤖 AI对话模式已启动 - 模型: {model}", "en": "🤖 AI Chat Mode Started - Model: {model}"},
+    "ai_mode_subtitle": {"cn": "💬 你可以开始与 AI 对话了！", "en": "💬 You can start chatting with AI now!"},
+    "return_menu_tip": {"cn": "📌 输入 '返回菜单' 返回主菜单\n", "en": "📌 Enter 'return menu' to go back\n"},
+    "user_prompt": {"cn": "User：", "en": "User: "},
+    "assistant_prompt": {"cn": "\nAssistant：{answer}\n", "en": "\nAssistant: {answer}\n"},
+    "ai_thinking": {"cn": "\n🤔 AI 正在思考...\n", "en": "\n🤔 AI is thinking...\n"},
+    "map_mode_title": {"cn": "🌍 地图查询模式已启动 - OpenStreetMap 地理编码", "en": "🌍 Map Query Mode Started - OpenStreetMap Geocoding"},
+    "map_mode_subtitle": {"cn": "📍 输入地址获取经纬度坐标", "en": "📍 Enter address to get coordinates"},
+    "enter_address": {"cn": "请输入地址: ", "en": "Enter address: "},
+    "searching": {"cn": "\n🔍 正在查询: {address}", "en": "\n🔍 Searching: {address}"},
+    "query_success": {"cn": "\n✅ 查询成功！", "en": "\n✅ Query successful!"},
+    "longitude": {"cn": "📍 经度 (Longitude): {lon}", "en": "📍 Longitude: {lon}"},
+    "latitude": {"cn": "📍 纬度 (Latitude): {lat}", "en": "📍 Latitude: {lat}"},
+    "full_address": {"cn": "📝 完整地址: {addr}", "en": "📝 Full address: {addr}"},
+    "importance": {"cn": "⭐ 匹配度: {imp:.2f}", "en": "⭐ Match score: {imp:.2f}"},
+    "address_not_found": {"cn": "\n❌ 未找到该地址，请尝试更具体的地址", "en": "\n❌ Address not found, please try a more specific address"},
+    "settings_title": {"cn": "⚙️  设置 / Settings", "en": "⚙️  Settings"},
+    "current_settings": {"cn": "📋 当前设置：", "en": "📋 Current Settings:"},
+    "setting_language": {"cn": "  1️⃣  语言 / Language: {lang}", "en": "  1️⃣  Language: {lang}"},
+    "setting_thinking": {"cn": "  2️⃣  显示 AI Thinking: {status}", "en": "  2️⃣  Show AI Thinking: {status}"},
+    "modify_tip": {"cn": "💡 输入数字修改设置，输入 '返回菜单' 返回\n", "en": "💡 Enter number to modify settings, enter 'return menu' to go back\n"},
+    "choose_setting": {"cn": "请选择要修改的设置：", "en": "Choose setting to modify: "},
+    "language_settings": {"cn": "\n📝 语言设置 / Language Settings", "en": "\n📝 Language Settings"},
+    "lang_option_cn": {"cn": "  1. 中文", "en": "  1. 中文 (Chinese)"},
+    "lang_option_en": {"cn": "  2. English", "en": "  2. English"},
+    "select_language": {"cn": "\n请选择语言 / Select language (1/2): ", "en": "\nSelect language (1/2): "},
+    "switched_to_cn": {"cn": "✅ 已切换到中文", "en": "✅ 已切换到中文"},
+    "switched_to_en": {"cn": "✅ Switched to English", "en": "✅ Switched to English"},
+    "invalid_lang_choice": {"cn": "❌ 无效选择 / Invalid choice", "en": "❌ Invalid choice"},
+    "thinking_settings": {"cn": "\n📝 AI Thinking 显示设置", "en": "\n📝 AI Thinking Display Settings"},
+    "current_status": {"cn": "  当前状态: {status}", "en": "  Current status: {status}"},
+    "enable_thinking": {"cn": "\n是否开启显示 AI thinking 过程？(y/n): ", "en": "\nEnable AI thinking display? (y/n): "},
+    "thinking_enabled": {"cn": "✅ 已开启 AI thinking 显示", "en": "✅ AI thinking display enabled"},
+    "thinking_disabled": {"cn": "✅ 已关闭 AI thinking 显示", "en": "✅ AI thinking display disabled"},
+    "invalid_input": {"cn": "❌ 无效输入", "en": "❌ Invalid input"},
+    "status_on": {"cn": "开启", "en": "On"},
+    "status_off": {"cn": "关闭", "en": "Off"},
+    "error": {"cn": "错误：{error}", "en": "Error: {error}"}
 }
 
 def t(key: str, **kwargs) -> str:
@@ -145,7 +91,7 @@ def t(key: str, **kwargs) -> str:
         格式化后的文本
     """
     lang = SETTINGS['language']
-    text = TEXTS.get(lang, TEXTS["中文"]).get(key, key)
+    text = TEXTS.get(key, {}).get(lang, key)
     if kwargs:
         return text.format(**kwargs)
     return text
@@ -338,10 +284,10 @@ def settings_mode():
             lang_choice = input(t("select_language")).strip()
             
             if lang_choice == "1":
-                SETTINGS['language'] = "中文"
+                SETTINGS['language'] = "cn"
                 print(t("switched_to_cn"))
             elif lang_choice == "2":
-                SETTINGS['language'] = "English"
+                SETTINGS['language'] = "en"
                 print(t("switched_to_en"))
             else:
                 print(t("invalid_lang_choice"))
