@@ -1,28 +1,44 @@
-# Agent Service
+# Agent Service - Model-Based AI Assistant
 
-基于 Ollama 的本地 AI 对话服务（使用 OpenAI Client）
+基于 Ollama 的智能对话助手（Model-Based 架构 + MCP 工具调用）
 
 ## 功能特性
 
-- 🎯 **统一菜单系统**：一键启动，智能切换多种功能模式
-- 🤖 **AI 对话模式**：使用 OpenAI Client 连接本地 Ollama 服务
-  - 🔧 **MCP 工具调用**：AI 可自动调用地理编码工具查询位置信息
-  - 💡 智能识别地址相关问题并自动查询坐标
-  - 📝 保持对话历史，支持多轮交互
-- 🗺️ **地图查询模式**：支持地址转经纬度查询（基于 OpenStreetMap）
-- ⚙️ **设置中心**：配置语言偏好和 AI 显示选项
-  - 🌐 **完整多语言支持**（中文/English）
-    - 所有界面文本实时切换
-    - 支持中英文命令识别（如 "返回菜单" / "return menu"）
-    - 无需重启，即时生效
-  - 🤔 AI Thinking 显示开关（流式输出思考过程）
-- 🔄 **模式切换**：在任意模式下输入 `返回菜单` 即可切换功能
-- 💡 **智能命令识别**：支持数字、完整名称、简称等多种输入方式
-- 支持 Qwen3:8b 等多种 AI 模型
-- 命令行交互界面，操作简单直观
-- 环境变量配置，灵活可定制
-- 完善的错误处理机制
-- 符合 DRY 原则的代码架构
+### 🎯 Model-Based 智能架构
+- **自然语言理解**：无需记忆命令，用人类自然语言交流即可
+- **意图自动识别**：AI 理解你的需求并自动调用相应工具
+- **零学习成本**：像和朋友聊天一样使用所有功能
+
+### 🔧 MCP 工具调用系统
+基于 Model Context Protocol (MCP) 实现的 4 大智能工具：
+
+1. **geocode_address** - 地理编码工具
+   - 📍 查询全球任意地址的经纬度坐标
+   - 🌍 支持中英文地址（如："北京天安门"、"Eiffel Tower"）
+   - 📝 返回完整地址信息和匹配度评分
+
+2. **switch_language** - 语言切换工具
+   - 🌐 动态切换界面语言（中文/English）
+   - 🔄 所有文本实时切换，无需重启
+   - 💬 中英文命令都能识别
+
+3. **toggle_thinking** - AI 思考过程开关
+   - 🤔 控制是否显示 AI 逐字思考过程
+   - 🌊 支持流式输出，观察 AI 生成过程
+   - ⚡ 关闭后直接显示结果，响应更快
+
+4. **navigate** - 导航控制工具
+   - 🚪 退出程序或返回菜单
+   - 🔄 智能识别退出意图
+
+### 💬 核心特性
+- 🤖 使用 OpenAI Client 连接本地 Ollama 服务
+- 📝 完整的对话历史记忆，支持多轮上下文理解
+- 🎨 友好的命令行交互界面
+- 🛡️ 完善的错误处理机制
+- 🏗️ 符合 DRY 原则的代码架构
+- 🔌 支持 Qwen3:8b 等多种 AI 模型
+- ⚙️ 环境变量配置，灵活可定制
 
 ## 环境要求
 
@@ -70,198 +86,28 @@ ollama serve
 
 ## 使用方法
 
-### 🚀 快速启动（推荐）
-
-只需一条命令即可启动所有功能：
+启动智能助手：
 
 ```bash
+# 直接使用虚拟环境中的 Python
 .venv/bin/python main.py
-```
 
-启动后会显示主菜单，你可以：
-- 输入 `1` 或 `AI对话模式` 进入 AI 对话
-- 输入 `2` 或 `地图查询模式` 进入地图查询
-- 输入 `3` 或 `设置` 配置语言和显示选项
-- 在任意模式中输入 `返回菜单` 切换到其他模式
-- 随时输入 `exit`、`quit` 或 `退出` 结束程序
-
-### 📋 主菜单示例
-
-```
-============================================================
-🎯 多功能智能助手
-============================================================
-📋 可用模式：
-  1️⃣  AI对话模式 - 与 Ollama AI 进行对话
-  2️⃣  地图查询模式 - 查询地址的经纬度坐标
-  3️⃣  设置 - 配置语言和显示选项
-============================================================
-💡 提示：在任意模式中输入 '返回菜单' 可返回主菜单
-       输入 'exit' 或 'quit' 可退出程序
-
-请选择模式（输入数字或模式名称）：
-```
-
-### 💬 模式选择方式
-
-**方式 1：数字选择**
-```bash
-请选择模式：1         # 进入 AI 对话模式
-请选择模式：2         # 进入地图查询模式
-请选择模式：3         # 进入设置
-```
-
-**方式 2：完整名称**
-```bash
-请选择模式：AI对话模式
-请选择模式：地图查询模式
-请选择模式：设置
-```
-
-**方式 3：简称**
-```bash
-请选择模式：AI         # 进入 AI 对话模式
-请选择模式：对话       # 进入 AI 对话模式
-请选择模式：地图       # 进入地图查询模式
-请选择模式：查询       # 进入地图查询模式
-请选择模式：settings   # 进入设置（也可用：配置）
-```
-
-**💡 提示：** 输入不区分大小写，`AI`、`ai`、`Ai` 都可以识别
-
-### 🔄 模式切换
-
-在任意模式下，输入以下任一命令即可返回主菜单：
-- `返回菜单`
-- `菜单`
-- `menu`
-- `back`
-
-### 🎮 完整使用流程
-
-1. **启动程序**
-```bash
-cd /Users/DongZh/Desktop/tryOllama
-.venv/bin/python main.py
-```
-
-2. **选择 AI 对话模式（支持 MCP 工具调用）**
-```
-请选择模式：1
-🤖 AI对话模式已启动 - 模型: qwen3:8b
-💬 你可以开始与 AI 对话了！
-💡 你可以问我关于地址和位置的问题，我会自动查询地理信息！
-
-User：你好
-Assistant：你好！有什么我可以帮助你的吗？
-
-User：北京天安门的经纬度是多少？
-
-🔧 正在调用工具: geocode_address
-📍 查询地址: 北京天安门
-
-Assistant：北京天安门的经纬度坐标如下：
-- 经度：116.391263°
-- 纬度：39.907359°
-
-该坐标对应的具体地址为：天安门, 西长安街, 东华门街道, 北京市东城区
-
-User：返回菜单
-🔄 正在返回主菜单...
-```
-
-3. **切换到地图查询模式**
-```
-请选择模式：2
-🌍 地图查询模式已启动
-请输入地址：北京
-✅ 查询成功！
-📍 经度: 116.4074
-📍 纬度: 39.9042
-
-请输入地址：返回菜单
-🔄 正在返回主菜单...
-```
-
-4. **进入设置修改配置**
-```
-请选择模式：3
-⚙️  设置 / Settings
-当前设置：
-  1️⃣  语言 / Language: 中文
-  2️⃣  显示 AI Thinking: 关闭
-
-请选择要修改的设置：2
-是否开启显示 AI thinking 过程？(y/n): y
-✅ 已开启 AI thinking 显示
-
-请选择要修改的设置：返回菜单
-🔄 正在返回主菜单...
-```
-
-5. **退出程序**
-```
-请选择模式：exit
-👋 感谢使用，再见！
-```
-
-### 📌 传统方式（仅供参考）
-
-如果需要单独运行某个模式，仍可使用：
-
-**仅 AI 对话：** （不推荐，建议使用主菜单）
-```bash
-# 已集成到主菜单，单独运行需要修改 main.py
-```
-
-**仅地理编码：** （不推荐，建议使用主菜单）
-```bash
-.venv/bin/python geocoding.py
-```
-
-### 🔧 虚拟环境管理（可选）
-
-如果想激活虚拟环境后直接使用 `python`：
-
-```bash
-# 激活虚拟环境
+# 或先激活虚拟环境
 source .venv/bin/activate
-
-# 运行程序（激活后）
 python main.py
-
-# 退出虚拟环境
-deactivate
 ```
 
-## 项目结构
+启动后使用自然语言与 AI 交互即可。
 
-```
-agent_service/
-├── main.py                  # 主程序入口（统一菜单系统 + AI 对话 + MCP 工具）
-├── textD.py                 # 多语言文本字典（Text Dictionary）
-├── geocoding.py             # 地理编码模块（OpenStreetMap）
-├── geocoding_examples.py    # 地理编码使用示例
-├── requirements.txt         # 依赖列表
-├── .env                     # 环境变量配置（不上传到 Git）
-├── .env.example             # 环境变量模板
-├── README.md                # 项目说明
-└── .gitignore              # Git 忽略文件
-```
-## MCP 工具调用功能 🔧
+**📖 详细使用指南：** 请查看 **[instruction.md](instruction.md)** 了解完整的使用流程、技巧和常见问题。
 
-### 什么是 MCP？
+## 📖 功能使用示例
 
-Model Context Protocol (MCP) 是一种让 AI 模型能够调用外部工具的标准协议。在本项目中，我们实现了基于 OpenAI Function Calling 的 MCP 风格工具调用。
+本项目采用 **Model-Based** 架构，使用自然语言交互，无需记忆命令。AI 会自动理解你的意图并调用相应工具。
 
-### 功能特点
+### 💡 功能示例
 
-- **🎯 智能识别**：AI 自动判断何时需要查询地理信息
-- **🔄 无缝集成**：用户无需手动切换模式，直接对话即可
-- **📊 结构化数据**：工具返回 JSON 格式数据，AI 自动解析并友好呈现
-- **💬 上下文保持**：支持多轮对话，AI 记住之前的查询结果
-
-### 使用示例
+#### 1. 查询地理位置
 
 ```bash
 User：帮我查一下巴黎埃菲尔铁塔的坐标
@@ -272,29 +118,333 @@ User：帮我查一下巴黎埃菲尔铁塔的坐标
 Assistant：巴黎埃菲尔铁塔的坐标如下：
 - 经度：2.2945°
 - 纬度：48.8580°
-
-完整地址：Tour Eiffel, Avenue Gustave Eiffel, Paris 75007, France
-
-User：它离卢浮宫远吗？
-
-Assistant：[AI 会基于之前的位置信息继续对话]
+- 完整地址：Tour Eiffel, Avenue Gustave Eiffel, Paris 75007, France
 ```
 
-### 工具定义
+**其他表达方式：** "北京天安门在哪里？" / "Where is the Eiffel Tower?" / "东京的经纬度"
 
-当前支持的 MCP 工具：
+#### 2. 切换语言
 
-1. **geocode_address** - 地理编码工具
-   - 输入：地址字符串（中英文均可）
-   - 输出：经纬度、完整地址、匹配度等信息
-   - 应用场景：位置查询、导航、地理分析
+```bash
+User：切换到英文
 
-### 扩展性
+🔧 正在调用工具: switch_language
+Assistant：✅ Language has been switched to English.
+```
 
-项目架构支持轻松添加新工具：
-1. 在 `TOOLS` 列表中定义新工具的 JSON Schema
-2. 在 `execute_tool()` 函数中实现工具逻辑
-3. AI 会自动学习何时调用新工具
+**其他表达方式：** "我想用英文" / "change language to English" / "切换语言"
+
+#### 3. 控制思考过程显示
+
+```bash
+User：开启 thinking
+
+🔧 正在调用工具: toggle_thinking
+Assistant：✅ 已开启 AI thinking 显示功能。
+从现在开始，你可以看到我逐字生成回答的过程。
+```
+
+**其他表达方式：** "我想看思考过程" / "enable thinking" / "关闭 thinking" / "disable thinking"
+
+#### 4. 退出程序
+
+**示例：** "退出" / "exit" / "bye" / "goodbye"
+
+### 🎨 多轮对话示例
+
+```bash
+User：帮我查一下北京的坐标
+Assistant：北京的坐标信息如下：经度 116.4074°，纬度 39.9042°
+
+User：那上海呢？
+Assistant：上海的坐标信息如下：经度 121.4737°，纬度 31.2304°
+
+User：切换到英文
+Assistant：✅ Successfully switched to English.
+
+User：What about Tokyo?
+Assistant：Here are the coordinates for Tokyo: 139.6917°E, 35.6895°N
+
+User：exit
+Assistant：👋 Goodbye!
+```
+
+## 项目结构
+
+```
+agent_service/
+├── main.py                  # 主程序（Model-Based 架构 + MCP 工具系统）
+│   ├── SYSTEM_PROMPT       # AI 意图理解的系统提示词（中英双语）
+│   ├── TOOLS               # 4 个 MCP 工具定义（geocode/language/thinking/navigate）
+│   ├── execute_tool()      # 统一工具执行函数
+│   ├── ask_qwen()          # AI 调用函数（支持工具调用）
+│   └── ai_chat_mode()      # Model-Based 对话模式
+├── textD.py                 # 多语言文本字典（keyword→language 结构）
+├── geocoding.py             # 地理编码模块（OpenStreetMap Nominatim）
+├── geocoding_examples.py    # 地理编码使用示例
+├── requirements.txt         # Python 依赖列表
+├── .env                     # 环境变量配置（不上传到 Git）
+├── .env.example             # 环境变量模板
+├── README.md                # 项目说明文档
+└── .gitignore              # Git 忽略配置
+```
+
+## 🔧 MCP 工具调用技术详解
+
+### 什么是 MCP？
+
+Model Context Protocol (MCP) 是一种让 AI 模型能够调用外部工具的标准协议。本项目实现了基于 **OpenAI Function Calling** 标准的 MCP 工具系统。
+
+### 架构优势
+
+#### Model-Based vs Rule-Based
+
+| 特性 | Rule-Based（传统） | Model-Based（本项目） |
+|------|-------------------|----------------------|
+| 命令识别 | 固定关键词匹配 | 自然语言理解 |
+| 用户体验 | 需要记忆命令 | 像聊天一样交互 |
+| 扩展性 | 需要添加规则 | AI 自动适应 |
+| 灵活性 | 输入格式严格 | 接受各种表达 |
+| 维护成本 | 高（规则爆炸） | 低（统一处理） |
+
+**示例对比：**
+```bash
+# Rule-Based 传统方式
+1. 输入 "1" 选择地图模式
+2. 等待提示 "请输入地址"
+3. 输入地址
+4. 获得结果
+
+# Model-Based 现代方式
+直接说："帮我查一下北京天安门在哪里" → 完成✅
+```
+
+### 4 大智能工具详解
+
+#### 1. 🌍 geocode_address - 地理编码工具
+
+**功能：** 将地址转换为经纬度坐标
+
+**触发方式（自然语言）：**
+- "帮我查一下[地址]在哪里"
+- "[地址]的坐标是多少"
+- "我想知道[地址]的位置"
+- "Where is [location]?"
+- "Find [address] for me"
+
+**输入：** 地址字符串（中英文均可）
+
+**输出：** JSON 格式
+```json
+{
+  "success": true,
+  "longitude": 2.2945,
+  "latitude": 48.8580,
+  "display_name": "Tour Eiffel, Paris, France",
+  "importance": 0.85
+}
+```
+
+**应用场景：**
+- 📍 地理位置查询
+- 🗺️ 导航路线规划
+- 📊 地理数据分析
+- 🌐 多地址批量查询
+
+#### 2. 🌐 switch_language - 语言切换工具
+
+**功能：** 动态切换界面语言
+
+**触发方式（自然语言）：**
+- "切换到英文"
+- "我想用中文"
+- "Switch to English"
+- "Change language"
+- "换个语言"
+
+**输入：** 目标语言代码（cn/en）
+
+**输出：** JSON 格式
+```json
+{
+  "success": true,
+  "old_language": "cn",
+  "new_language": "en",
+  "message": "✅ Switched to English"
+}
+```
+
+**特点：**
+- 🔄 实时切换，无需重启
+- 🌍 支持 50+ 界面文本
+- 💬 中英文命令都识别
+- 📝 所有文本来自 textD.py
+
+#### 3. 🤔 toggle_thinking - AI 思考过程开关
+
+**功能：** 控制是否显示 AI 逐字生成过程
+
+**触发方式（自然语言）：**
+- "开启 thinking"
+- "我想看思考过程"
+- "Enable thinking"
+- "Show me how you think"
+- "关闭 thinking" / "Disable thinking"
+
+**输入：** 布尔值（true/false）
+
+**输出：** JSON 格式
+```json
+{
+  "success": true,
+  "thinking_enabled": true,
+  "message": "✅ AI Thinking On"
+}
+```
+
+**效果对比：**
+```bash
+# Thinking 关闭（默认）
+User：什么是AI？
+Assistant：AI 是人工智能的缩写...[完整回答]
+
+# Thinking 开启
+User：什么是AI？
+🤔 AI 正在思考...
+AI（逐字出现） 是（逐字） 人工（逐字） 智能（逐字）...
+```
+
+#### 4. 🚪 navigate - 导航控制工具
+
+**功能：** 控制程序流程（退出/返回）
+
+**触发方式（自然语言）：**
+- "退出" / "exit"
+- "我要走了" / "bye"
+- "quit" / "goodbye"
+- "返回菜单" / "return menu"
+
+**输入：** 动作类型（exit/menu）
+
+**输出：** JSON 格式
+```json
+{
+  "success": true,
+  "action": "exit",
+  "message": "Navigation action recorded"
+}
+```
+
+**特点：**
+- 🔄 优雅退出，保存状态
+- 💬 多种表达方式识别
+- 🌐 中英文都支持
+
+### 工作流程
+
+```
+用户输入自然语言
+       ↓
+   SYSTEM_PROMPT 引导
+       ↓
+  AI 理解意图
+       ↓
+   选择合适工具
+       ↓
+  execute_tool() 执行
+       ↓
+   返回 JSON 结果
+       ↓
+  AI 解析并友好呈现
+       ↓
+   用户看到结果
+```
+
+### 扩展新工具
+
+项目架构支持轻松添加新工具，只需 3 步：
+
+#### 步骤 1：定义工具 Schema
+
+在 `main.py` 中添加：
+```python
+NEW_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "tool_name",
+        "description": "工具功能描述",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "param_name": {
+                    "type": "string",
+                    "description": "参数说明"
+                }
+            },
+            "required": ["param_name"]
+        }
+    }
+}
+
+# 添加到 TOOLS 列表
+TOOLS = [GEOCODING_TOOL, LANGUAGE_TOOL, THINKING_TOOL, NAVIGATE_TOOL, NEW_TOOL]
+```
+
+#### 步骤 2：实现工具逻辑
+
+在 `execute_tool()` 函数中添加：
+```python
+def execute_tool(tool_name: str, arguments: dict) -> str:
+    # ... 现有工具代码 ...
+    
+    elif tool_name == "tool_name":
+        # 实现你的工具逻辑
+        result = do_something(arguments)
+        return json.dumps({
+            "success": True,
+            "result": result
+        }, ensure_ascii=False)
+```
+
+#### 步骤 3：更新系统提示词
+
+在 `SYSTEM_PROMPT` 中告诉 AI 何时使用新工具：
+```python
+SYSTEM_PROMPT = {
+    "cn": """...
+    - 当用户想[使用场景]时，使用 tool_name 工具
+    ..."""
+}
+```
+
+**完成！** AI 会自动学习何时调用新工具。
+
+### 技术实现细节
+
+**基于 OpenAI Function Calling：**
+```python
+response = client.chat.completions.create(
+    model=MODEL_NAME,
+    messages=messages,
+    tools=TOOLS,  # 传入工具定义
+    temperature=0.7
+)
+
+# AI 决定是否调用工具
+if response.choices[0].message.tool_calls:
+    # 执行工具调用
+    for tool_call in response.choices[0].message.tool_calls:
+        result = execute_tool(
+            tool_call.function.name,
+            json.loads(tool_call.function.arguments)
+        )
+```
+
+**优势：**
+- ✅ 遵循 OpenAI 标准
+- ✅ 兼容多种模型（Qwen、Llama 等）
+- ✅ 支持工具链（Tool Chain）
+- ✅ 易于调试和测试
 
 ## 地理编码功能 🗺️
 
@@ -383,108 +533,54 @@ if result:
 - `OLLAMA_API_KEY`: API Key（Ollama 不验证，但必须提供）
 - `MODEL_NAME`: 使用的模型名称（默认：qwen3:8b）
 
-### ⚙️ 应用内设置
-
-通过主菜单选择 `3. 设置` 可以配置以下选项：
-
-#### 1. 🌐 语言设置 (Language)
-- **中文**：所有界面显示为中文
-- **English**：所有界面显示为英文
-- **实时切换**：无需重启程序，立即生效
-- **全面覆盖**：包括菜单、提示、错误信息等所有文本
-- **命令支持**：中英文命令都能识别（如 "返回菜单" 和 "return menu"）
-
-**语言切换效果对比：**
-
-*中文界面：*
-```
-============================================================
-🎯 多功能智能助手
-============================================================
-📋 可用模式：
-  1️⃣  AI对话模式 - 与 Ollama AI 进行对话
-  2️⃣  地图查询模式 - 查询地址的经纬度坐标
-  3️⃣  设置 - 配置语言和显示选项
-```
-
-*English Interface:*
-```
-============================================================
-🎯 Multi-functional AI Assistant
-============================================================
-📋 Available Modes:
-  1️⃣  AI Chat Mode - Chat with Ollama AI
-  2️⃣  Map Query Mode - Query address coordinates
-  3️⃣  Settings - Configure language and display options
-```
-
-#### 2. 🤔 AI Thinking 显示
-- **开启**：使用流式输出，逐字显示 AI 生成过程，可以看到 AI 的"思考"过程
-- **关闭**：直接显示完整回答，响应更快
-- 适合不同使用场景的需求
-
-**使用示例：**
-```bash
-# 进入设置
-请选择模式：3
-
-# 修改语言为英文
-请选择要修改的设置：1
-请选择语言 / Select language (1/2): 2
-✅ Switched to English
-
-# 此时所有界面自动变为英文
-Choose setting to modify: 2
-Enable AI thinking display? (y/n): y
-✅ AI thinking display enabled
-
-# 返回菜单（英文命令）
-Choose setting to modify: return menu
-🔄 Returning to main menu...
-
-# 主菜单现在是英文
-Choose mode (number or name): 1
-🤖 AI Chat Mode Started - Model: qwen3:8b
-User: Hello
-Assistant: Hello! How can I help you?
-```
-
 ## 技术特点
 
-**多语言架构：**
-- 📁 **textD.py** - 文本字典独立文件，逻辑与展示完全分离
-- 🔄 数据结构优化：第一层为功能关键词，第二层为语言代码（cn/en）
-- 🌐 支持动态语言切换，易于扩展新语言
-- 🎯 中英文命令智能识别
+### 🏗️ Model-Based 智能架构
+- **🎯 自然语言理解**：基于 SYSTEM_PROMPT 的意图识别系统
+- **🤖 零规则匹配**：完全移除硬编码关键词，AI 自主判断
+- **🔄 上下文感知**：完整对话历史，支持多轮理解
+- **📊 结构化输出**：工具返回 JSON，AI 自动格式化呈现
 
-**AI 对话功能（MCP 增强）：**
-- 🔧 **Model Context Protocol (MCP) 工具调用**
-  - AI 可自动识别地理位置相关问题
-  - 调用 geocode_address 工具实时查询坐标
-  - 工具结果自动集成到 AI 回答中
-- 🤖 使用 OpenAI 官方客户端库
-- ⚡ 兼容 OpenAI API 格式
-- 🔄 轻松切换到其他 OpenAI 兼容的服务
-- 📝 保持完整对话历史，支持上下文理解
-- 🌊 支持流式和非流式输出
-- 🔐 使用 python-dotenv 管理环境变量
+### 🔧 MCP 工具调用系统
+- **⚡ OpenAI Function Calling 标准**：兼容多种模型
+- **4 大智能工具**：geocode / language / thinking / navigate
+- **🔌 即插即用**：3 步添加新工具，AI 自动适配
+- **💡 智能派发**：AI 自主选择合适工具，无需人工指定
+- **🔗 工具链支持**：可串联多个工具完成复杂任务
 
-**地理编码功能：**
-- 基于 OpenStreetMap Nominatim API
-- 支持全球地址查询（中英文）
-- 自动速率限制保护
-- 返回详细地址信息和匹配度评分
+### 🌐 多语言架构
+- **📁 textD.py**：文本字典独立文件，逻辑与展示完全分离
+- **🔄 优化结构**：keyword→language 双层结构，易于维护
+- **🌍 动态切换**：实时语言切换，无需重启程序
+- **🎯 智能识别**：中英文命令都能理解
+- **📝 50+ 文本条目**：覆盖所有界面元素
 
-**代码架构：**
-- 符合 DRY (Don't Repeat Yourself) 原则
-- 模块化设计，易于维护和扩展
-- 公共功能统一提取
-- 配置集中管理
+### 🤖 AI 对话功能
+- **OpenAI 官方客户端**：使用标准 SDK
+- **⚡ API 兼容**：支持 OpenAI / Ollama / 其他兼容服务
+- **🌊 流式输出**：支持 streaming 模式观察思考过程
+- **📝 对话历史**：完整上下文记忆，支持多轮交互
+- **🔐 环境变量**：使用 python-dotenv 安全管理配置
 
-**包管理：**
-- 使用 uv 替代传统 pip（速度提升 10-100 倍）
-- 快速的依赖解析和安装
-- 更好的依赖冲突解决
+### 🗺️ 地理编码功能
+- **OpenStreetMap Nominatim API**：免费开源地理服务
+- **🌍 全球覆盖**：支持世界各地地址查询
+- **🔤 多语言**：中英文地址都能识别
+- **⏱️ 速率保护**：自动限速，遵守 OSM 使用政策
+- **📊 详细信息**：返回坐标、完整地址、匹配度评分
+
+### 💻 代码架构
+- **DRY 原则**：无重复代码，统一处理逻辑
+- **模块化设计**：功能独立，易于维护和扩展
+- **📦 公共函数**：t() 函数统一文本获取，execute_tool() 统一工具执行
+- **⚙️ 集中配置**：SETTINGS 全局配置，.env 环境变量
+- **📏 代码精简**：从 530 行优化到 420 行（减少 21%）
+
+### ⚡ 包管理
+- **uv 超快速度**：Rust 编写，比 pip 快 10-100 倍
+- **🔒 可靠解析**：更准确的依赖冲突检测
+- **💾 全局缓存**：跨项目共享依赖，节省空间
+- **🎯 更好体验**：清晰的进度显示和错误信息
 
 ## 许可证
 
@@ -499,3 +595,11 @@ Assistant: Hello! How can I help you?
 - 🎯 **更好的用户体验**：清晰的进度显示和错误信息
 
 更多信息：https://github.com/astral-sh/uv
+
+---
+
+## � 相关文档
+
+想了解详细的使用方法？请查看：
+
+👉 **[完整使用指南](instruction.md)** - 从启动到退出的详细步骤、使用技巧和常见问题解答

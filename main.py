@@ -21,14 +21,41 @@ SETTINGS = {
     "show_thinking": False  # 是否显示 AI thinking 过程
 }
 
-# 模式匹配关键词
-MODE_KEYWORDS = {
-    "ai": ("1", "ai对话模式", "ai对话", "ai", "对话模式", "对话", "ai chat", "chat"),
-    "map": ("2", "地图查询模式", "地图查询", "地图模式", "地图", "查询模式", "查询", "map", "query"),
-    "settings": ("3", "设置", "settings", "配置", "setting")
+# 系统提示词 - Model-Based 模式理解
+SYSTEM_PROMPT = {
+    "cn": """你是一个智能助手，可以帮助用户执行以下功能：
+
+1. **AI对话**：与用户进行自然对话，回答问题
+2. **地图查询**：查询地址的经纬度坐标（使用 geocode_address 工具）
+3. **语言切换**：切换界面语言（中文/English）
+4. **AI Thinking 开关**：控制是否显示 AI 思考过程
+
+你需要理解用户的意图并执行相应操作：
+- 当用户想查询位置/地址/坐标时，使用 geocode_address 工具
+- 当用户想切换语言时，使用 switch_language 工具
+- 当用户想开关 thinking 显示时，使用 toggle_thinking 工具
+- 当用户想退出或返回菜单时，使用 navigate 工具
+- 其他情况正常对话即可
+
+请友好、准确地回应用户。""",
+    "en": """You are an intelligent assistant that can help users with the following features:
+
+1. **AI Chat**: Have natural conversations with users and answer questions
+2. **Map Query**: Query latitude and longitude coordinates for addresses (using geocode_address tool)
+3. **Language Switch**: Switch interface language (Chinese/English)
+4. **AI Thinking Toggle**: Control whether to display AI thinking process
+
+You need to understand user intent and perform corresponding actions:
+- When users want to query locations/addresses/coordinates, use geocode_address tool
+- When users want to switch language, use switch_language tool
+- When users want to toggle thinking display, use toggle_thinking tool
+- When users want to exit or return to menu, use navigate tool
+- For other cases, just chat normally
+
+Please respond in a friendly and accurate manner."""
 }
 
-# MCP 工具定义 - 地理编码工具
+# MCP 工具定义
 GEOCODING_TOOL = {
     "type": "function",
     "function": {
@@ -47,7 +74,63 @@ GEOCODING_TOOL = {
     }
 }
 
-TOOLS = [GEOCODING_TOOL]
+LANGUAGE_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "switch_language",
+        "description": "切换界面语言。Switch interface language.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "language": {
+                    "type": "string",
+                    "enum": ["cn", "en"],
+                    "description": "目标语言代码：'cn' 表示中文，'en' 表示 English"
+                }
+            },
+            "required": ["language"]
+        }
+    }
+}
+
+THINKING_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "toggle_thinking",
+        "description": "开关 AI thinking 显示。Toggle AI thinking display.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "true 表示开启，false 表示关闭"
+                }
+            },
+            "required": ["enabled"]
+        }
+    }
+}
+
+NAVIGATE_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "navigate",
+        "description": "导航控制：退出程序或返回菜单。Navigation control: exit program or return to menu.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["exit", "menu"],
+                    "description": "'exit' 表示退出程序，'menu' 表示返回菜单"
+                }
+            },
+            "required": ["action"]
+        }
+    }
+}
+
+TOOLS = [GEOCODING_TOOL, LANGUAGE_TOOL, THINKING_TOOL, NAVIGATE_TOOL]
 
 def t(key: str, **kwargs) -> str:
     """
@@ -96,24 +179,62 @@ def execute_tool(tool_name: str, arguments: dict) -> str:
                 "error": "Address not found"
             }, ensure_ascii=False)
     
+    elif tool_name == "switch_language":
+        lang = arguments.get("language", "cn")
+        old_lang = SETTINGS['language']
+        SETTINGS['language'] = lang
+        
+        lang_name = "中文" if lang == "cn" else "English"
+        return json.dumps({
+            "success": True,
+            "old_language": old_lang,
+            "new_language": lang,
+            "message": f"✅ Switched to {lang_name}"
+        }, ensure_ascii=False)
+    
+    elif tool_name == "toggle_thinking":
+        enabled = arguments.get("enabled", False)
+        SETTINGS['show_thinking'] = enabled
+        
+        status = t("status_on") if enabled else t("status_off")
+        return json.dumps({
+            "success": True,
+            "thinking_enabled": enabled,
+            "message": f"✅ AI Thinking {status}"
+        }, ensure_ascii=False)
+    
+    elif tool_name == "navigate":
+        action = arguments.get("action", "menu")
+        return json.dumps({
+            "success": True,
+            "action": action,
+            "message": "Navigation action recorded"
+        }, ensure_ascii=False)
+    
     return json.dumps({"error": f"Unknown tool: {tool_name}"}, ensure_ascii=False)
 
-def ask_qwen(prompt: str, messages: list = None, use_tools: bool = False) -> str:
+def ask_qwen(prompt: str, messages: list = None, use_tools: bool = False, use_system_prompt: bool = False) -> tuple:
     """
     使用 OpenAI Client 方式调用本地 Ollama 模型
     Args:
         prompt: 用户输入的问题
         messages: 对话历史（可选）
         use_tools: 是否启用工具调用
+        use_system_prompt: 是否使用系统提示词（model-based 模式）
     Returns:
-        模型的回答
+        (回答, 导航命令) - 导航命令可能是 None, "exit", "menu"
     """
     import json
     
     try:
         # 构建消息列表
         if messages is None:
-            messages = [{"role": "user", "content": prompt}]
+            messages = []
+            # 添加系统提示词
+            if use_system_prompt:
+                lang = SETTINGS['language']
+                messages.append({"role": "system", "content": SYSTEM_PROMPT[lang]})
+            messages.append({"role": "user", "content": prompt})
         
         # 公共配置
         common_params = {
@@ -154,7 +275,19 @@ def ask_qwen(prompt: str, messages: list = None, use_tools: bool = False) -> str
                     
                     # 显示工具调用信息
                     print("\n" + t("tool_calling", tool=function_name))
-                    print(t("tool_query_address", address=function_args.get('address', '')))
+                    
+                    # 根据不同工具显示不同的参数信息
+                    if function_name == "geocode_address":
+                        print(t("tool_query_address", address=function_args.get('address', '')))
+                    elif function_name == "switch_language":
+                        lang_name = "中文" if function_args.get('language') == 'cn' else "English"
+                        print(f"🌐 切换到: {lang_name}")
+                    elif function_name == "toggle_thinking":
+                        status = "开启" if function_args.get('enabled') else "关闭"
+                        print(f"🤔 AI Thinking: {status}")
+                    elif function_name == "navigate":
+                        action_text = "退出程序" if function_args.get('action') == 'exit' else "返回菜单"
+                        print(f"🔄 操作: {action_text}")
                     
                     # 执行工具
                     result = execute_tool(function_name, function_args)
@@ -179,6 +312,13 @@ def ask_qwen(prompt: str, messages: list = None, use_tools: bool = False) -> str
                         "content": result
                     })
                 
+                # 检查是否有导航命令
+                nav_action = None
+                for result in tool_results:
+                    result_data = json.loads(result)
+                    if result_data.get("action") in ("exit", "menu"):
+                        nav_action = result_data.get("action")
+                
                 # 使用工具结果再次调用模型生成最终回答
                 final_response = client.chat.completions.create(
                     model=MODEL_NAME,
@@ -186,38 +326,11 @@ def ask_qwen(prompt: str, messages: list = None, use_tools: bool = False) -> str
                     temperature=0.7,
                     timeout=120
                 )
-                return final_response.choices[0].message.content
+                return (final_response.choices[0].message.content, nav_action)
             
-            return message.content
+            return (message.content, None)
     except Exception as e:
-        return t("error", error=str(e))
-
-
-def check_user_command(user_input: str) -> str:
-    """
-    检查用户输入的命令
-    Args:
-        user_input: 用户输入的字符串
-    Returns:
-        "exit" - 用户想退出程序
-        "menu" - 用户想返回菜单
-        "continue" - 继续处理用户输入
-        "skip" - 空输入，跳过
-    """
-    if not user_input:
-        return "skip"
-    
-    user_input_lower = user_input.lower()
-    
-    if user_input_lower in ("exit", "quit", "退出"):
-        print(t("goodbye"))
-        return "exit"
-    
-    if user_input_lower in ("返回菜单", "菜单", "menu", "back", "return menu"):
-        print(t("returning_menu"))
-        return "menu"
-    
-    return "continue"
+        return (t("error", error=str(e)), None)
 
 
 def print_mode_header(title: str, subtitle: str = ""):
@@ -234,180 +347,84 @@ def print_mode_header(title: str, subtitle: str = ""):
     print(t("return_menu_tip"))
 
 
-def show_menu():
-    """显示主菜单"""
-    print("\n" + "=" * 60)
-    print(t("main_title"))
-    print("=" * 60)
-    print(t("available_modes"))
-    print(t("mode_ai"))
-    print(t("mode_map"))
-    print(t("mode_settings"))
-    print("=" * 60)
-    print(t("tip_return"))
-    print(t("tip_exit"))
-
-
 def ai_chat_mode():
-    """AI 对话模式（支持 MCP 工具调用）"""
-    subtitle = t("ai_mode_subtitle") + "\n" + t("ai_tool_hint")
+    """AI 对话模式（Model-Based 智能理解）"""
+    lang = SETTINGS['language']
+    if lang == "cn":
+        subtitle = t("ai_mode_subtitle") + "\n💡 我可以理解你的需求！你可以：\n   - 自然对话\n   - 查询地址坐标\n   - 切换语言（说'切换到英文'）\n   - 控制 thinking 显示（说'开启/关闭 thinking'）\n   - 随时说'退出'或'返回菜单'"
+    else:
+        subtitle = t("ai_mode_subtitle") + "\n💡 I can understand your needs! You can:\n   - Chat naturally\n   - Query address coordinates\n   - Switch language (say 'switch to Chinese')\n   - Control thinking display (say 'enable/disable thinking')\n   - Say 'exit' or 'return to menu' anytime"
     
     print_mode_header(
-        t("ai_mode_title", model=MODEL_NAME),
+        t("ai_mode_title", model=MODEL_NAME) + " [Model-Based]",
         subtitle
     )
     
-    messages = []
+    # 初始化消息历史（包含系统提示词）
+    messages = [{"role": "system", "content": SYSTEM_PROMPT[SETTINGS['language']]}]
     
     while True:
         user_input = input(t("user_prompt")).strip()
         
-        command = check_user_command(user_input)
-        if command in ("exit", "menu"):
-            return command
-        if command == "skip":
+        if not user_input:
             continue
         
         # 添加用户消息到历史
         messages.append({"role": "user", "content": user_input})
         
-        # 使用工具调用模式
-        answer = ask_qwen(user_input, messages=messages.copy(), use_tools=True)
+        # 使用 model-based 模式（带系统提示词和工具调用）
+        answer, nav_action = ask_qwen(user_input, messages=messages.copy(), use_tools=True, use_system_prompt=False)
+        
+        # 检查导航命令
+        if nav_action == "exit":
+            print(t("goodbye"))
+            return "exit"
+        elif nav_action == "menu":
+            print(t("returning_menu"))
+            return "menu"
         
         # 添加助手回答到历史
         messages.append({"role": "assistant", "content": answer})
         
-        # 如果开启了 thinking 显示，回答已经在流式输出中显示了
+        # 显示回答
         if not SETTINGS['show_thinking']:
             print(t("assistant_prompt", answer=answer))
         else:
             print()  # 添加空行
 
 
-def map_query_mode():
-    """地图查询模式"""
-    print_mode_header(
-        t("map_mode_title"),
-        t("map_mode_subtitle")
-    )
-    
-    geocoder = NominatimGeocoder()
-    
-    while True:
-        address = input(t("enter_address")).strip()
-        
-        command = check_user_command(address)
-        if command in ("exit", "menu"):
-            return command
-        if command == "skip":
-            continue
-        
-        print(t("searching", address=address))
-        result = geocoder.geocode(address)
-        
-        if result:
-            print(t("query_success"))
-            print(t("longitude", lon=result['longitude']))
-            print(t("latitude", lat=result['latitude']))
-            print(t("full_address", addr=result['display_name']))
-            print(t("importance", imp=result['importance']))
-        else:
-            print(t("address_not_found"))
-        
-        print("\n" + "-" * 50 + "\n")
-
-
-def get_thinking_status() -> str:
-    """获取 thinking 状态的显示文本"""
-    return t("status_on") if SETTINGS['show_thinking'] else t("status_off")
-
-
-def settings_mode():
-    """设置模式"""
-    def show_settings():
-        """显示当前设置"""
-        print("\n" + "=" * 60)
-        print(t("settings_title"))
-        print("=" * 60)
-        print(t("current_settings"))
-        print(t("setting_language", lang=SETTINGS['language']))
-        print(t("setting_thinking", status=get_thinking_status()))
-        print("=" * 60)
-        print(t("modify_tip"))
-    
-    while True:
-        show_settings()
-        
-        choice = input(t("choose_setting")).strip()
-        
-        command = check_user_command(choice)
-        if command in ("exit", "menu"):
-            return command
-        if command == "skip":
-            continue
-        
-        choice_lower = choice.lower()
-        
-        if choice_lower in ("1", "语言", "language"):
-            print(t("language_settings"))
-            print(t("lang_option_cn"))
-            print(t("lang_option_en"))
-            lang_choice = input(t("select_language")).strip()
-            
-            if lang_choice == "1":
-                SETTINGS['language'] = "cn"
-                print(t("switched_to_cn"))
-            elif lang_choice == "2":
-                SETTINGS['language'] = "en"
-                print(t("switched_to_en"))
-            else:
-                print(t("invalid_lang_choice"))
-        
-        elif choice_lower in ("2", "thinking", "显示thinking"):
-            print(t("thinking_settings"))
-            print(t("current_status", status=get_thinking_status()))
-            toggle = input(t("enable_thinking")).strip().lower()
-            
-            if toggle in ('y', 'yes', '是', '开启'):
-                SETTINGS['show_thinking'] = True
-                print(t("thinking_enabled"))
-            elif toggle in ('n', 'no', '否', '关闭'):
-                SETTINGS['show_thinking'] = False
-                print(t("thinking_disabled"))
-            else:
-                print(t("invalid_input"))
-        
-        else:
-            print(t("invalid_choice"))
-
-
 def main():
-    """主程序入口"""
-    while True:
-        show_menu()
-        
-        choice = input(t("choose_mode")).strip()
-        
-        if choice.lower() in ("exit", "quit", "退出"):
-            break
-        
-        # 处理用户输入（转为小写进行匹配）
-        choice_lower = choice.lower()
-        if choice_lower in MODE_KEYWORDS["ai"]:
-            result = ai_chat_mode()
-        elif choice_lower in MODE_KEYWORDS["map"]:
-            result = map_query_mode()
-        elif choice_lower in MODE_KEYWORDS["settings"]:
-            result = settings_mode()
-        else:
-            print(t("invalid_choice"))
-            continue
-        
-        # 如果用户选择退出，则结束程序
-        if result == "exit":
-            break
+    """主程序入口 - Model-Based 模式"""
+    lang = SETTINGS['language']
     
-    print(t("thank_you"))
+    print("\n" + "=" * 60)
+    if lang == "cn":
+        print("🎯 智能助手 [Model-Based Mode]")
+        print("💡 我可以理解你的自然语言指令！")
+        print("\n你可以直接说：")
+        print("  - '我想查询北京天安门的坐标'")
+        print("  - '帮我查一下巴黎埃菲尔铁塔在哪里'")
+        print("  - '切换到英文' 或 '切换语言'")
+        print("  - '开启 thinking' 或 '关闭 thinking'")
+        print("  - '退出' 或 'quit'")
+        print("\n或者随便跟我聊天！")
+    else:
+        print("🎯 Intelligent Assistant [Model-Based Mode]")
+        print("💡 I can understand your natural language commands!")
+        print("\nYou can simply say:")
+        print("  - 'I want to query the coordinates of Tiananmen Square'")
+        print("  - 'Help me find where the Eiffel Tower in Paris is'")
+        print("  - 'Switch to Chinese' or 'change language'")
+        print("  - 'Enable thinking' or 'disable thinking'")
+        print("  - 'Exit' or 'quit'")
+        print("\nOr just chat with me!")
+    print("=" * 60 + "\n")
+    
+    # 使用 AI 对话模式（model-based）
+    result = ai_chat_mode()
+    
+    if result != "exit":
+        print(t("thank_you"))
 
 
 if __name__ == "__main__":
