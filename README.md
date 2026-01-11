@@ -63,10 +63,10 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 brew install uv
 ```
 
-3. 创建虚拟环境并安装依赖
+3. 安装项目依赖
 ```bash
-uv venv
-uv pip install -r requirements.txt
+# uv 会自动创建虚拟环境并安装依赖
+uv sync
 ```
 
 4. 配置环境变量（可选）
@@ -89,8 +89,8 @@ ollama serve
 启动智能助手：
 
 ```bash
-# 直接使用虚拟环境中的 Python
-.venv/bin/python main.py
+# 使用 uv 运行（推荐）
+uv run python main.py
 
 # 或先激活虚拟环境
 source .venv/bin/activate
@@ -463,7 +463,7 @@ if response.choices[0].message.tool_calls:
 
 **1. 交互式查询：**
 ```bash
-.venv/bin/python geocoding.py
+uv run python geocoding.py
 ```
 输入地址，即可获得：
 - 经度 (Longitude)
@@ -473,7 +473,7 @@ if response.choices[0].message.tool_calls:
 
 **2. 批量查询示例：**
 ```bash
-.venv/bin/python geocoding_examples.py
+uv run python geocoding_examples.py
 ```
 运行预设的示例，展示：
 - 基础用法
