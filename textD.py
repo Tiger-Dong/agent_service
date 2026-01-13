@@ -63,10 +63,19 @@ TEXTS = {
     "error": {"cn": "错误：{error}", "en": "Error: {error}"},
     "ai_tool_hint": {"cn": "💡 你可以问我关于地址和位置的问题，我会自动查询地理信息！", "en": "💡 You can ask me about addresses and locations, I'll query geographic information automatically!"},
     "tool_calling": {"cn": "🔧 正在调用工具: {tool}", "en": "🔧 Calling tool: {tool}"},
-    "tool_query_address": {"cn": "📍 查询地址: {address}", "en": "📍 Query address: {address}"}
-}
-
-# 支持的语言列表
+    "tool_query_address": {"cn": "📍 查询地址: {address}", "en": "📍 Query address: {address}"},
+    "tool_query_weather": {"cn": "🌤️  查询天气: ({lat}, {lon})", "en": "🌤️  Query weather: ({lat}, {lon})"},
+    "weather_location": {"cn": "📍 查询地点", "en": "📍 Location"},
+    "weather_coordinates": {"cn": "🗺️  坐标", "en": "🗺️  Coordinates"},
+    "weather_condition": {"cn": "☁️  天气状况", "en": "☁️  Weather Condition"},
+    "weather_temp_range": {"cn": "🌡️  当天温度区间", "en": "🌡️  Today's Temperature Range"},
+    "weather_current_temp": {"cn": "🌡️  当前温度", "en": "🌡️  Current Temperature"},
+    "weather_travel_advice": {"cn": "👔 出行建议", "en": "👔 Travel Advice"},
+    "weather_feels_like": {"cn": "🤔 体感温度: {temp}°C", "en": "🤔 Feels like: {temp}°C"},
+    "weather_humidity": {"cn": "💧 湿度: {humidity}%", "en": "💧 Humidity: {humidity}%"},
+    "weather_wind": {"cn": "💨 风速: {speed} km/h", "en": "💨 Wind: {speed} km/h"},
+    "weather_precipitation": {"cn": "🌧️  降水: {precip} mm", "en": "🌧️  Precipitation: {precip} mm"},
+    "weather_forecast": {"cn": "📅 未来预报", "en": "📅 Forecast"}
 SUPPORTED_LANGUAGES = ["cn", "en"]
 
 # 默认语言

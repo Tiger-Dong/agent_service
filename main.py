@@ -3,6 +3,7 @@ import readline  # 支持方向键、历史记录等输入增强功能
 from openai import OpenAI
 from dotenv import load_dotenv
 from geocoding import NominatimGeocoder
+from weather import OpenMeteoWeather
 from textD import TEXTS
 
 # 加载环境变量
@@ -33,8 +34,9 @@ SYSTEM_PROMPT = """你是一个智能助手 / You are an intelligent assistant.
 **功能 / Features:**
 1. **AI对话 / AI Chat**: 与用户自然对话，回答问题 / Have natural conversations and answer questions
 2. **地图查询 / Map Query**: 查询地址的经纬度坐标 / Query latitude and longitude coordinates
-3. **语言切换 / Language Switch**: 切换界面语言（中文/English） / Switch interface language
-4. **AI Thinking 开关 / Thinking Toggle**: 控制是否显示 AI 思考过程 / Control AI thinking display
+3. **天气查询 / Weather Query**: 查询任何地点的天气信息和穿衣建议 / Query weather information and clothing advice for any location
+4. **语言切换 / Language Switch**: 切换界面语言（中文/English） / Switch interface language
+5. **AI Thinking 开关 / Thinking Toggle**: 控制是否显示 AI 思考过程 / Control AI thinking display
 
 **重要 / Important:**
 - 用户可以用**中文或英文**发出任何指令，你都要能理解
@@ -45,12 +47,37 @@ SYSTEM_PROMPT = """你是一个智能助手 / You are an intelligent assistant.
 **工具使用 / Tool Usage:**
 - 查询位置/地址/坐标 → 使用 geocode_address 工具
 - Query locations/addresses/coordinates → use geocode_address tool
+- 查询天气 → 使用 get_weather 工具（需要经纬度）
+- Query weather → use get_weather tool (requires latitude/longitude)
 - 切换语言（无论用什么语言表达）→ 使用 switch_language 工具
 - Switch language (no matter which language used) → use switch_language tool
 - 开关 thinking 显示 → 使用 toggle_thinking 工具
 - Toggle thinking display → use toggle_thinking tool
 - 退出/返回菜单 → 使用 navigate 工具
 - Exit/return to menu → use navigate tool
+
+**重要：串联使用工具 / Important: Chaining Tools:**
+- 当用户问"某地的天气"或"去某地该穿什么"时，你需要：
+  1. 先使用 geocode_address 获取该地的经纬度和完整地名
+  2. 再使用 get_weather 查询天气信息
+  3. 按照以下格式展示结果（清晰、结构化）
+- When users ask about weather or clothing advice for a location:
+  1. First use geocode_address to get coordinates and full location name
+  2. Then use get_weather to query weather
+  3. Present results in a clear, structured format
+
+**天气信息展示格式 / Weather Display Format:**
+当返回天气信息时，请按以下结构展示：
+1. 📍 查询地点 (Location): [完整地名]
+2. 🗺️  坐标 (Coordinates): (纬度, 经度)
+3. ☁️  天气状况 (Weather): [天气描述]
+4. 🌡️  当天温度区间 (Today's Range): [最低温]°C ~ [最高温]°C
+5. 🌡️  当前温度 (Current): [温度]°C ([温度描述，如：冰点温度])
+6. 👔 出行建议 (Travel Advice): [穿衣建议 + 装备建议]
+
+**示例场景 / Example Scenarios:**
+- "明天去纽约应该穿什么？" → geocode_address("New York") → get_weather(lat, lon) → 结构化展示
+- "北京今天天气怎么样？" → geocode_address("北京") → get_weather(lat, lon) → 结构化展示
 
 请友好、准确地回应用户。Please respond in a friendly and accurate manner."""
 
@@ -69,6 +96,33 @@ GEOCODING_TOOL = {
                 }
             },
             "required": ["address"]
+        }
+    }
+}
+
+WEATHER_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "根据经纬度获取天气信息，包括当前天气、未来预报和穿衣建议。注意：需要先使用 geocode_address 获取经纬度。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "latitude": {
+                    "type": "number",
+                    "description": "纬度坐标，例如：39.9042（北京）"
+                },
+                "longitude": {
+                    "type": "number",
+                    "description": "经度坐标，例如：116.4074（北京）"
+                },
+                "forecast_days": {
+                    "type": "integer",
+                    "description": "预报天数（1-7天），默认为 3 天",
+                    "default": 3
+                }
+            },
+            "required": ["latitude", "longitude"]
         }
     }
 }
@@ -129,7 +183,7 @@ NAVIGATE_TOOL = {
     }
 }
 
-TOOLS = [GEOCODING_TOOL, LANGUAGE_TOOL, THINKING_TOOL, NAVIGATE_TOOL]
+TOOLS = [GEOCODING_TOOL, WEATHER_TOOL, LANGUAGE_TOOL, THINKING_TOOL, NAVIGATE_TOOL]
 
 def t(key: str, **kwargs) -> str:
     """
@@ -176,6 +230,68 @@ def execute_tool(tool_name: str, arguments: dict) -> str:
                 "success": False,
                 "address": address,
                 "error": "Address not found"
+            }, ensure_ascii=False)
+    
+    elif tool_name == "get_weather":
+        latitude = arguments.get("latitude")
+        longitude = arguments.get("longitude")
+        forecast_days = arguments.get("forecast_days", 3)
+        
+        weather_api = OpenMeteoWeather()
+        result = weather_api.get_weather(latitude, longitude, forecast_days)
+        
+        if result:
+            current = result["current"]
+            forecast = result["forecast"][:forecast_days]
+            
+            # 获取当天的温度区间（从预报数据中获取）
+            today_forecast = forecast[0] if forecast else None
+            temp_range = None
+            if today_forecast:
+                temp_range = {
+                    "min": today_forecast["temp_min"],
+                    "max": today_forecast["temp_max"]
+                }
+            
+            # 获取温度描述
+            temp_description = weather_api.get_temperature_description(current["temperature"])
+            
+            # 获取穿衣建议和出行装备建议
+            clothing_advice = weather_api.get_clothing_advice(
+                current["temperature"],
+                current["weather_code"]
+            )
+            
+            return json.dumps({
+                "success": True,
+                "location": {
+                    "latitude": latitude,
+                    "longitude": longitude
+                },
+                "weather": {
+                    "description": current["weather_description"],
+                    "condition": current["weather_description"].split('/')[0].strip()
+                },
+                "temperature": {
+                    "current": current["temperature"],
+                    "description": temp_description,
+                    "feels_like": current["feels_like"],
+                    "range": temp_range
+                },
+                "details": {
+                    "humidity": current["humidity"],
+                    "wind_speed": current["wind_speed"],
+                    "precipitation": current["precipitation"]
+                },
+                "travel_advice": {
+                    "clothing": clothing_advice
+                },
+                "forecast": forecast
+            }, ensure_ascii=False)
+        else:
+            return json.dumps({
+                "success": False,
+                "error": "Weather query failed"
             }, ensure_ascii=False)
     
     elif tool_name == "switch_language":
