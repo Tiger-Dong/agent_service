@@ -1,4 +1,5 @@
 import os
+import readline  # 支持方向键、历史记录等输入增强功能
 from openai import OpenAI
 from dotenv import load_dotenv
 from geocoding import NominatimGeocoder
@@ -6,6 +7,11 @@ from textD import TEXTS
 
 # 加载环境变量
 load_dotenv()
+
+# 配置 readline 以支持更好的输入体验
+# 启用 Tab 补全和历史记录功能
+readline.parse_and_bind('tab: complete')
+readline.parse_and_bind('set editing-mode emacs')  # Emacs 编辑模式（支持 Ctrl+A/E 等快捷键）
 
 # 配置 OpenAI Client 连接到本地 Ollama
 client = OpenAI(
@@ -21,39 +27,32 @@ SETTINGS = {
     "show_thinking": False  # 是否显示 AI thinking 过程
 }
 
-# 系统提示词 - Model-Based 模式理解
-SYSTEM_PROMPT = {
-    "cn": """你是一个智能助手，可以帮助用户执行以下功能：
+# 系统提示词 - Model-Based 模式理解（双语版本）
+SYSTEM_PROMPT = """你是一个智能助手 / You are an intelligent assistant.
 
-1. **AI对话**：与用户进行自然对话，回答问题
-2. **地图查询**：查询地址的经纬度坐标（使用 geocode_address 工具）
-3. **语言切换**：切换界面语言（中文/English）
-4. **AI Thinking 开关**：控制是否显示 AI 思考过程
+**功能 / Features:**
+1. **AI对话 / AI Chat**: 与用户自然对话，回答问题 / Have natural conversations and answer questions
+2. **地图查询 / Map Query**: 查询地址的经纬度坐标 / Query latitude and longitude coordinates
+3. **语言切换 / Language Switch**: 切换界面语言（中文/English） / Switch interface language
+4. **AI Thinking 开关 / Thinking Toggle**: 控制是否显示 AI 思考过程 / Control AI thinking display
 
-你需要理解用户的意图并执行相应操作：
-- 当用户想查询位置/地址/坐标时，使用 geocode_address 工具
-- 当用户想切换语言时，使用 switch_language 工具
-- 当用户想开关 thinking 显示时，使用 toggle_thinking 工具
-- 当用户想退出或返回菜单时，使用 navigate 工具
-- 其他情况正常对话即可
+**重要 / Important:**
+- 用户可以用**中文或英文**发出任何指令，你都要能理解
+- Users can give commands in **Chinese or English**, you must understand both
+- 当用户说"切换到英文"、"change to english"、"switch to english"等，使用 switch_language 工具切换到 'en'
+- 当用户说"切换到中文"、"change to chinese"、"switch to chinese"等，使用 switch_language 工具切换到 'cn'
 
-请友好、准确地回应用户。""",
-    "en": """You are an intelligent assistant that can help users with the following features:
+**工具使用 / Tool Usage:**
+- 查询位置/地址/坐标 → 使用 geocode_address 工具
+- Query locations/addresses/coordinates → use geocode_address tool
+- 切换语言（无论用什么语言表达）→ 使用 switch_language 工具
+- Switch language (no matter which language used) → use switch_language tool
+- 开关 thinking 显示 → 使用 toggle_thinking 工具
+- Toggle thinking display → use toggle_thinking tool
+- 退出/返回菜单 → 使用 navigate 工具
+- Exit/return to menu → use navigate tool
 
-1. **AI Chat**: Have natural conversations with users and answer questions
-2. **Map Query**: Query latitude and longitude coordinates for addresses (using geocode_address tool)
-3. **Language Switch**: Switch interface language (Chinese/English)
-4. **AI Thinking Toggle**: Control whether to display AI thinking process
-
-You need to understand user intent and perform corresponding actions:
-- When users want to query locations/addresses/coordinates, use geocode_address tool
-- When users want to switch language, use switch_language tool
-- When users want to toggle thinking display, use toggle_thinking tool
-- When users want to exit or return to menu, use navigate tool
-- For other cases, just chat normally
-
-Please respond in a friendly and accurate manner."""
-}
+请友好、准确地回应用户。Please respond in a friendly and accurate manner."""
 
 # MCP 工具定义
 GEOCODING_TOOL = {
@@ -232,8 +231,7 @@ def ask_qwen(prompt: str, messages: list = None, use_tools: bool = False, use_sy
             messages = []
             # 添加系统提示词
             if use_system_prompt:
-                lang = SETTINGS['language']
-                messages.append({"role": "system", "content": SYSTEM_PROMPT[lang]})
+                messages.append({"role": "system", "content": SYSTEM_PROMPT})
             messages.append({"role": "user", "content": prompt})
         
         # 公共配置
@@ -360,8 +358,8 @@ def ai_chat_mode():
         subtitle
     )
     
-    # 初始化消息历史（包含系统提示词）
-    messages = [{"role": "system", "content": SYSTEM_PROMPT[SETTINGS['language']]}]
+    # 初始化消息历史（包含系统提示词 - 双语版本）
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     
     while True:
         user_input = input(t("user_prompt")).strip()
