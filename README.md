@@ -217,7 +217,7 @@ Assistant：👋 Goodbye!
 ## 项目结构
 
 ```
-agent_service/
+tryOllama/
 ├── main.py                  # 主程序（Model-Based 架构 + MCP 工具系统）
 │   ├── SYSTEM_PROMPT       # AI 意图理解的系统提示词（中英双语）
 │   ├── TOOLS               # 5 个 MCP 工具定义（geocode/weather/language/thinking/navigate）
@@ -226,13 +226,18 @@ agent_service/
 │   └── ai_chat_mode()      # Model-Based 对话模式
 ├── textD.py                 # 多语言文本字典（keyword→language 结构）
 ├── geocoding.py             # 地理编码模块（OpenStreetMap Nominatim）
-├── geocoding_examples.py    # 地理编码使用示例
 ├── weather.py               # 天气查询模块（Open-Meteo API）
-├── weather_examples.py      # 天气模块使用示例
-├── requirements.txt         # Python 依赖列表
+├── demo_weather.py          # 功能演示（集成地理编码+天气）
+├── test_all.py              # 完整测试套件（整合所有测试）
+├── pyproject.toml           # 项目配置和依赖管理
+├── uv.lock                  # 依赖版本锁定文件
+├── requirements.txt         # 传统 pip 依赖（兼容）
 ├── .env                     # 环境变量配置（不上传到 Git）
 ├── .env.example             # 环境变量模板
 ├── README.md                # 项目说明文档
+├── instruction.md           # 快速使用指南
+├── docs/                    # 文档目录
+│   └── archive/            # 归档的历史文档
 └── .gitignore              # Git 忽略配置
 ```
 

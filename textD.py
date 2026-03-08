@@ -76,6 +76,9 @@ TEXTS = {
     "weather_wind": {"cn": "💨 风速: {speed} km/h", "en": "💨 Wind: {speed} km/h"},
     "weather_precipitation": {"cn": "🌧️  降水: {precip} mm", "en": "🌧️  Precipitation: {precip} mm"},
     "weather_forecast": {"cn": "📅 未来预报", "en": "📅 Forecast"}
+}
+
+# 支持的语言列表
 SUPPORTED_LANGUAGES = ["cn", "en"]
 
 # 默认语言
