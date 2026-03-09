@@ -247,9 +247,7 @@ tryOllama/
 ├── textD.py             # 多语言文本字典
 ├── test_all.py          # 完整测试套件
 ├── demo_weather.py      # 功能演示
-├── pyproject.toml       # 项目配置
-├── instruction.md       # 使用指南
-└── docs/archive/        # 归档文档
+└── pyproject.toml       # 项目配置
 ```
 
 ## 🔧 技术特点
@@ -271,7 +269,6 @@ tryOllama/
 
 - **测试功能**：运行 `uv run python test_all.py` 验证所有功能
 - **功能演示**：运行 `uv run python demo_weather.py` 查看代码示例
-- **历史文档**：[docs/archive/](docs/archive/) - 归档的版本更新记录
 
 ## ⚖️ 许可证
 
