@@ -237,6 +237,35 @@ def execute_tool(tool_name: str, arguments: dict) -> str:
         longitude = arguments.get("longitude")
         forecast_days = arguments.get("forecast_days", 3)
         
+        # 参数验证
+        if latitude is None or longitude is None:
+            return json.dumps({
+                "success": False,
+                "error": "Missing required parameters: latitude and longitude"
+            }, ensure_ascii=False)
+        
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+        except (ValueError, TypeError):
+            return json.dumps({
+                "success": False,
+                "error": f"Invalid coordinate values: latitude={latitude}, longitude={longitude}"
+            }, ensure_ascii=False)
+        
+        # 范围检查
+        if not (-90 <= latitude <= 90):
+            return json.dumps({
+                "success": False,
+                "error": f"Latitude must be between -90 and 90, got {latitude}"
+            }, ensure_ascii=False)
+        
+        if not (-180 <= longitude <= 180):
+            return json.dumps({
+                "success": False,
+                "error": f"Longitude must be between -180 and 180, got {longitude}"
+            }, ensure_ascii=False)
+        
         weather_api = OpenMeteoWeather()
         result = weather_api.get_weather(latitude, longitude, forecast_days)
         
@@ -438,13 +467,80 @@ def ask_qwen(prompt: str, messages: list = None, use_tools: bool = False, use_sy
                     model=MODEL_NAME,
                     messages=messages,
                     temperature=0.7,
-                    timeout=120
+                    timeout=120,
+                    tools=TOOLS  # 保持工具定义，避免模型输出原始格式
                 )
-                return (final_response.choices[0].message.content, nav_action)
+                
+                final_message = final_response.choices[0].message
+                
+                # 检查模型是否再次尝试调用工具（处理工具调用循环）
+                if hasattr(final_message, 'tool_calls') and final_message.tool_calls:
+                    # 模型想要继续调用工具，递归处理（最多2轮）
+                    for tool_call in final_message.tool_calls:
+                        function_name = tool_call.function.name
+                        function_args = json.loads(tool_call.function.arguments)
+                        
+                        print("\n" + t("tool_calling", tool=function_name))
+                        result = execute_tool(function_name, function_args)
+                        
+                        messages.append({
+                            "role": "assistant",
+                            "content": None,
+                            "tool_calls": [{
+                                "id": tool_call.id,
+                                "type": "function",
+                                "function": {
+                                    "name": function_name,
+                                    "arguments": tool_call.function.arguments
+                                }
+                            }]
+                        })
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "content": result
+                        })
+                    
+                    # 第三次调用生成最终回答
+                    final_response = client.chat.completions.create(
+                        model=MODEL_NAME,
+                        messages=messages,
+                        temperature=0.7,
+                        timeout=120
+                    )
+                    final_message = final_response.choices[0].message
+                
+                # 检查响应内容是否有效
+                if not final_message.content:
+                    return ("⚠️ 模型未返回有效响应，请重试", nav_action)
+                
+                return (final_message.content, nav_action)
             
             return (message.content, None)
+    except TimeoutError as e:
+        error_msg = "⏱️ 请求超时，请检查 Ollama 服务是否正常运行"
+        print(f"\n❌ {error_msg}")
+        return (error_msg, None)
+    except ConnectionError as e:
+        error_msg = ("🔌 无法连接到 Ollama 服务，请确认:\n"
+                    "   1. Ollama 已安装并运行 (运行 'ollama serve')\n"
+                    "   2. 服务地址正确 (默认: http://localhost:11434)")
+        print(f"\n❌ {error_msg}")
+        return (error_msg, None)
+    except json.JSONDecodeError as e:
+        error_msg = f"📦 JSON 解析错误: {str(e)}"
+        print(f"\n❌ {error_msg}")
+        return (error_msg, None)
+    except KeyError as e:
+        error_msg = f"🔑 缺少必要的响应字段: {str(e)}"
+        print(f"\n❌ {error_msg}")
+        return (error_msg, None)
     except Exception as e:
-        return (t("error", error=str(e)), None)
+        import traceback
+        error_msg = f"❌ 未知错误: {str(e)}"
+        print(f"\n{error_msg}")
+        print(f"\n🐛 详细错误信息:\n{traceback.format_exc()}")
+        return (error_msg, None)
 
 
 def print_mode_header(title: str, subtitle: str = ""):
