@@ -461,14 +461,14 @@ def ask_qwen(prompt: str, messages: list = None, use_tools: bool = False, use_sy
                     if function_name == "geocode_address":
                         print(t("tool_query_address", address=function_args.get('address', '')))
                     elif function_name == "switch_language":
-                        lang_name = "中文" if function_args.get('language') == 'cn' else "English"
-                        print(f"🌐 切换到: {lang_name}")
+                        lang_name = t("lang_name_cn") if function_args.get('language') == 'cn' else t("lang_name_en")
+                        print(t("tool_switch_lang", lang=lang_name))
                     elif function_name == "toggle_thinking":
                         status = "开启" if function_args.get('enabled') else "关闭"
-                        print(f"🤔 AI Thinking: {status}")
+                        print(t("tool_thinking_status", status=status))
                     elif function_name == "navigate":
-                        action_text = "退出程序" if function_args.get('action') == 'exit' else "返回菜单"
-                        print(f"🔄 操作: {action_text}")
+                        action_text = t("action_exit") if function_args.get('action') == 'exit' else t("action_menu")
+                        print(t("tool_navigation", action=action_text))
                     
                     # 执行工具
                     result = execute_tool(function_name, function_args)
@@ -550,34 +550,32 @@ def ask_qwen(prompt: str, messages: list = None, use_tools: bool = False, use_sy
                 
                 # 检查响应内容是否有效
                 if not final_message.content:
-                    return ("⚠️ 模型未返回有效响应，请重试", nav_action)
+                    return (t("error_no_response"), nav_action)
                 
                 return (final_message.content, nav_action)
             
             return (message.content, None)
     except TimeoutError as e:
-        error_msg = "⏱️ 请求超时，请检查 Ollama 服务是否正常运行"
+        error_msg = t("error_timeout")
         print(f"\n❌ {error_msg}")
         return (error_msg, None)
     except ConnectionError as e:
-        error_msg = ("🔌 无法连接到 Ollama 服务，请确认:\n"
-                    "   1. Ollama 已安装并运行 (运行 'ollama serve')\n"
-                    "   2. 服务地址正确 (默认: http://localhost:11434)")
+        error_msg = t("error_connection")
         print(f"\n❌ {error_msg}")
         return (error_msg, None)
     except json.JSONDecodeError as e:
-        error_msg = f"📦 JSON 解析错误: {str(e)}"
+        error_msg = t("error_json", error=str(e))
         print(f"\n❌ {error_msg}")
         return (error_msg, None)
     except KeyError as e:
-        error_msg = f"🔑 缺少必要的响应字段: {str(e)}"
+        error_msg = t("error_keyerror", error=str(e))
         print(f"\n❌ {error_msg}")
         return (error_msg, None)
     except Exception as e:
         import traceback
-        error_msg = f"❌ 未知错误: {str(e)}"
+        error_msg = t("error_unknown", error=str(e))
         print(f"\n{error_msg}")
-        print(f"\n🐛 详细错误信息:\n{traceback.format_exc()}")
+        print(t("error_details", trace=traceback.format_exc()))
         return (error_msg, None)
 
 
@@ -599,9 +597,9 @@ def ai_chat_mode():
     """AI 对话模式（Model-Based 智能理解）"""
     lang = SETTINGS['language']
     if lang == "cn":
-        subtitle = t("ai_mode_subtitle") + "\n💡 我可以理解你的需求！你可以：\n   - 自然对话\n   - 查询地址坐标\n   - 切换语言（说'切换到英文'）\n   - 控制 thinking 显示（说'开启/关闭 thinking'）\n   - 随时说'退出'或'返回菜单'"
+        subtitle = t("ai_mode_subtitle") + t("ai_chat_tips_cn")
     else:
-        subtitle = t("ai_mode_subtitle") + "\n💡 I can understand your needs! You can:\n   - Chat naturally\n   - Query address coordinates\n   - Switch language (say 'switch to Chinese')\n   - Control thinking display (say 'enable/disable thinking')\n   - Say 'exit' or 'return to menu' anytime"
+        subtitle = t("ai_mode_subtitle") + t("ai_chat_tips_en")
     
     print_mode_header(
         t("ai_mode_title", model=MODEL_NAME) + " [Model-Based]",
@@ -660,25 +658,15 @@ def main():
     
     print("\n" + "=" * 60)
     if lang == "cn":
-        print("🎯 智能助手 [Model-Based Mode]")
-        print("💡 我可以理解你的自然语言指令！")
-        print("\n你可以直接说：")
-        print("  - '我想查询北京天安门的坐标'")
-        print("  - '帮我查一下巴黎埃菲尔铁塔在哪里'")
-        print("  - '切换到英文' 或 'change language'")
-        print("  - '开启 thinking' 或 '关闭 thinking'")
-        print("  - '退出' 或 'quit'")
-        print("\n或者随便跟我聊天！")
+        print(t("welcome_title"))
+        print(t("welcome_subtitle"))
+        print(t("welcome_prompt"))
+        print(t("welcome_examples_cn"))
     else:
-        print("🎯 Intelligent Assistant [Model-Based Mode]")
-        print("💡 I can understand your natural language commands!")
-        print("\nYou can simply say:")
-        print("  - 'I want to query the coordinates of Tiananmen Square'")
-        print("  - 'Help me find where the Eiffel Tower in Paris is'")
-        print("  - 'Switch to Chinese' or '切换语言'")
-        print("  - 'Enable thinking' or 'disable thinking'")
-        print("  - 'Exit' or 'quit'")
-        print("\nOr just chat with me!")
+        print(t("welcome_title"))
+        print(t("welcome_subtitle"))
+        print(t("welcome_prompt"))
+        print(t("welcome_examples_en"))
     print("=" * 60 + "\n")
     
     # 使用 AI 对话模式（model-based）
