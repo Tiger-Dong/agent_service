@@ -38,6 +38,14 @@ SYSTEM_PROMPT = """你是一个智能助手 / You are an intelligent assistant.
 4. **语言切换 / Language Switch**: 切换界面语言（中文/English） / Switch interface language
 5. **AI Thinking 开关 / Thinking Toggle**: 控制是否显示 AI 思考过程 / Control AI thinking display
 
+**🎯 语言一致性规则 (CRITICAL Language Consistency Rules):**
+- **如果用户用中文提问** → 必须用纯中文回答（可在括号内补充英文）
+- **If user asks in English** → Must reply in pure English ONLY (no Chinese mixed in)
+- **当前系统语言设置**: 根据 current_language 参数
+  - current_language='cn' → 回答用中文
+  - current_language='en' → 回答用英文
+- 禁止中英文混杂输出（如："天气 / Weather"，除非明确要求双语）
+
 **重要 / Important:**
 - 用户可以用**中文或英文**发出任何指令，你都要能理解
 - Users can give commands in **Chinese or English**, you must understand both
@@ -66,20 +74,30 @@ SYSTEM_PROMPT = """你是一个智能助手 / You are an intelligent assistant.
   2. Then use get_weather to query weather
   3. Present results in a clear, structured format
 
-**天气信息展示格式 / Weather Display Format:**
-当返回天气信息时，请按以下结构展示：
-1. 📍 查询地点 (Location): [完整地名]
-2. 🗺️  坐标 (Coordinates): (纬度, 经度)
-3. ☁️  天气状况 (Weather): [天气描述]
-4. 🌡️  当天温度区间 (Today's Range): [最低温]°C ~ [最高温]°C
-5. 🌡️  当前温度 (Current): [温度]°C ([温度描述，如：冰点温度])
-6. 👔 出行建议 (Travel Advice): [穿衣建议 + 装备建议]
+**天气信息展示格式规则 / Weather Display Format Rules:**
 
-**示例场景 / Example Scenarios:**
-- "明天去纽约应该穿什么？" → geocode_address("New York") → get_weather(lat, lon) → 结构化展示
-- "北京今天天气怎么样？" → geocode_address("北京") → get_weather(lat, lon) → 结构化展示
+**中文用户 (Chinese Users):**
+- 📍 查询地点: [完整地名]
+- 🗺️ 坐标: (纬度, 经度)
+- ☁️ 天气状况: [天气描述]
+- 🌡️ 当天温度区间: [最低温]°C ~ [最高温]°C
+- 🌡️ 当前温度: [温度]°C ([温度描述])
+- 👔 出行建议: [穿衣建议]
 
-请友好、准确地回应用户。Please respond in a friendly and accurate manner."""
+**English Users:**
+- 📍 Location: [Full location name]
+- 🗺️ Coordinates: (latitude, longitude)
+- ☁️ Weather: [Weather description]
+- 🌡️ Today's Range: [min]°C ~ [max]°C
+- 🌡️ Current: [temp]°C ([description])
+- 👔 Travel Advice: [Clothing advice]
+
+**示例 / Examples:**
+- 中文: "北京今天天气怎么样？" → 纯中文回答
+- English: "What's the weather in New York?" → Pure English response
+
+请友好、准确地回应用户，并严格遵守语言一致性规则。
+Please respond in a friendly and accurate manner, strictly following language consistency rules."""
 
 # MCP 工具定义
 GEOCODING_TOOL = {
@@ -184,6 +202,26 @@ NAVIGATE_TOOL = {
 }
 
 TOOLS = [GEOCODING_TOOL, WEATHER_TOOL, LANGUAGE_TOOL, THINKING_TOOL, NAVIGATE_TOOL]
+
+def detect_language(text: str) -> str:
+    """
+    检测用户输入的语言
+    Args:
+        text: 用户输入文本
+    Returns:
+        'cn' 或 'en'
+    """
+    # 统计中文字符数量
+    chinese_chars = sum(1 for char in text if '\u4e00' <= char <= '\u9fff')
+    # 统计英文字母数量
+    english_chars = sum(1 for char in text if char.isalpha() and char.isascii())
+    
+    # 如果有中文字符，判断为中文
+    if chinese_chars > 0:
+        return 'cn'
+    
+    # 如果只有英文或其他字符，判断为英文
+    return 'en'
 
 def t(key: str, **kwargs) -> str:
     """
@@ -579,8 +617,21 @@ def ai_chat_mode():
         if not user_input:
             continue
         
+        # 检测用户输入语言并自动切换
+        detected_lang = detect_language(user_input)
+        if detected_lang != SETTINGS['language']:
+            SETTINGS['language'] = detected_lang
+            print(f"\n🌐 {t('lang_auto_switch')}: {'中文' if detected_lang == 'cn' else 'English'}\n")
+        
         # 添加用户消息到历史
         messages.append({"role": "user", "content": user_input})
+        
+        # 在系统提示词中注入当前语言设置
+        current_system_prompt = SYSTEM_PROMPT.replace(
+            "**🎯 语言一致性规则",
+            f"**[Current System Language: {'Chinese' if SETTINGS['language'] == 'cn' else 'English'}]**\n\n**🎯 语言一致性规则"
+        )
+        messages[0] = {"role": "system", "content": current_system_prompt}
         
         # 使用 model-based 模式（带系统提示词和工具调用）
         answer, nav_action = ask_qwen(user_input, messages=messages.copy(), use_tools=True, use_system_prompt=False)

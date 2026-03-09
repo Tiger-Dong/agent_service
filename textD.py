@@ -65,6 +65,7 @@ TEXTS = {
     "tool_calling": {"cn": "🔧 正在调用工具: {tool}", "en": "🔧 Calling tool: {tool}"},
     "tool_query_address": {"cn": "📍 查询地址: {address}", "en": "📍 Query address: {address}"},
     "tool_query_weather": {"cn": "🌤️  查询天气: ({lat}, {lon})", "en": "🌤️  Query weather: ({lat}, {lon})"},
+    "lang_auto_switch": {"cn": "自动切换语言", "en": "Language auto-switched"},
     "weather_location": {"cn": "📍 查询地点", "en": "📍 Location"},
     "weather_coordinates": {"cn": "🗺️  坐标", "en": "🗺️  Coordinates"},
     "weather_condition": {"cn": "☁️  天气状况", "en": "☁️  Weather Condition"},
