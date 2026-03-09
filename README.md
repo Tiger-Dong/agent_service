@@ -271,7 +271,6 @@ tryOllama/
 
 - **测试功能**：运行 `uv run python test_all.py` 验证所有功能
 - **功能演示**：运行 `uv run python demo_weather.py` 查看代码示例
-- **精简记录**：[REFACTOR_SUMMARY.md](REFACTOR_SUMMARY.md) - 项目精简和重构详情
 - **历史文档**：[docs/archive/](docs/archive/) - 归档的版本更新记录
 
 ## ⚖️ 许可证
