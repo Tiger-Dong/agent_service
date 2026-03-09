@@ -6,12 +6,12 @@
 
 - **WEATHER_GUIDE.md** - 天气功能详细指南（内容已整合到 README.md）
 - **UPDATE_NOTES.md** - 版本更新记录（内容已整合到主文档）
+- **instruction.md** - 快速使用指南（内容已整合到 README.md 的折叠区域）
 
 ## 为什么归档？
 
 这些文档包含重复内容，已被整合到更清晰简洁的主文档中：
-- README.md - 完整的项目文档
-- instruction.md - 快速使用指南
+- README.md - 完整的项目文档（包含详细折叠区域）
 
 ## 查看归档内容
 
